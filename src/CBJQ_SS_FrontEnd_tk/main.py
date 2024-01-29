@@ -1,5 +1,10 @@
 import tkinter
 from tkinter import ttk
+import subprocess
+import shutil
+import os.path as osp
+import os
+import sys
 
 tkinter_NWES = (tkinter.N, tkinter.W, tkinter.E, tkinter.S)
 
@@ -8,9 +13,19 @@ def func_none(*args):
     print('none')
 
 
+def checkExecutableReadiness(exec_name: str):
+    if not osp.exists(exec_name) and not shutil.which(exec_name):
+        return False
+    return True
+
+
 class CBJQ_SS_FrontEnd_tk:
 
-    def __init__(self):
+    backend_path: str
+
+    def __init__(self, **kwargs):
+        self.backend_path = kwargs.get('backend_path')
+
         self.root_window = tkinter.Tk()
         self.root_window.title("尘白禁区服务器切换器 - 前端")
 
@@ -54,13 +69,39 @@ class CBJQ_SS_FrontEnd_tk:
 
     def execAction(self, **kwargs):
         print(kwargs)
+        launch_args = []
         if kwargs.get('action') in ['s', 's&r']:
             print('do switch')
+            launch_args.append('-nopause')
             if kwargs['action'] == 's&r':
                 print('launch')
-
+            else:
+                launch_args.append('-nostart')
+            launch_cmd = [self.backend_path]
+            launch_cmd.extend(launch_args)
+            print(launch_cmd)
+            with subprocess.Popen(launch_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding='utf-8') as sp:
+                print(sp.pid)
+                output = sp.stdout.readlines()
+                for i in output:
+                    print(f'[stdout]: {i}', end='')
+                print('')
         pass
 
 
 if __name__ == '__main__':
-    CBJQ_SS_FrontEnd_tk().run()
+    backend_path = 'CBJQ_SS.main.bat'
+
+    argv = sys.argv
+    for i in range(0, len(argv)):
+        if argv[i] == '-cwd':
+            cwd = argv[i+1]
+            print('Old CWD: ' + os.getcwd())
+            os.chdir(cwd)
+            print('New CWD: ' + os.getcwd())
+            break
+
+    exec_readiness = checkExecutableReadiness('CBJQ_SS.main.bat')
+    if exec_readiness is False:
+        print('Executable not found.')
+    CBJQ_SS_FrontEnd_tk(backend_path=backend_path).run()
