@@ -21,10 +21,12 @@ def checkExecutableReadiness(exec_name: str):
 
 class CBJQ_SS_FrontEnd_tk:
 
+    server_list: dict
     backend_path: str
 
     def __init__(self, **kwargs):
         self.backend_path = kwargs.get('backend_path')
+        self.server_list = kwargs.get('server_list')
 
         self.root_window = tkinter.Tk()
         self.root_window.title("尘白禁区服务器切换器 - 前端")
@@ -43,7 +45,7 @@ class CBJQ_SS_FrontEnd_tk:
         self.listServer_label_Var = tkinter.StringVar(value='预设服务器列表：')
         self.listServer_label = ttk.Label(self.main_frame, textvariable=self.listServer_label_Var)
         # Define listServer_listbox
-        self.listServer_listbox_choice = ['worldwide', 'bilibili', 'kingsoft']
+        self.listServer_listbox_choice = list(self.server_list.keys())
         self.listServer_listbox_choice_Var = tkinter.StringVar(value=self.listServer_listbox_choice)
         self.listServer_listbox = tkinter.Listbox(self.main_frame, listvariable=self.listServer_listbox_choice_Var, width=20)
         # Define doAction_frame
@@ -77,6 +79,12 @@ class CBJQ_SS_FrontEnd_tk:
                 print('launch')
             else:
                 launch_args.append('-nostart')
+            curselection_idxs: tuple = self.listServer_listbox.curselection()
+            print(curselection_idxs)
+            if len(curselection_idxs) > 0:
+                curselection_idx = int(curselection_idxs[0])
+                curselection_value = self.server_list[self.listServer_listbox_choice[curselection_idx]]
+                launch_args.append(curselection_value)
             launch_cmd = [self.backend_path]
             launch_cmd.extend(launch_args)
             print(launch_cmd)
@@ -91,6 +99,7 @@ class CBJQ_SS_FrontEnd_tk:
 
 if __name__ == '__main__':
     backend_path = 'CBJQ_SS.main.bat'
+    server_list = {'国际服': 'worldwide', 'B服': 'bilibili', '官服': 'kingsoft'}
 
     argv = sys.argv
     for i in range(0, len(argv)):
@@ -104,4 +113,4 @@ if __name__ == '__main__':
     exec_readiness = checkExecutableReadiness('CBJQ_SS.main.bat')
     if exec_readiness is False:
         print('Executable not found.')
-    CBJQ_SS_FrontEnd_tk(backend_path=backend_path).run()
+    CBJQ_SS_FrontEnd_tk(backend_path=backend_path, server_list=server_list).run()
