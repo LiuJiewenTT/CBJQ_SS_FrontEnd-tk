@@ -5,7 +5,7 @@ import shutil
 import os.path as osp
 import os
 import sys
-from typing import Dict
+from typing import Dict, Tuple
 from functools import partial
 
 tkinter_NWES = (tkinter.N, tkinter.W, tkinter.E, tkinter.S)
@@ -26,21 +26,30 @@ def printAndInsertWrapper(func):
         print_flag = kwargs.get('print')
         if print_flag is not False:
             endding = kwargs.get('end')
-            if print_flag is not None:  # print=True
+            if print_flag is not None:  # print=True (by default)
                 kwargs.pop('print')
             print(args[1], end=endding)
         func.__call__(*args, **kwargs)
+
     return func2
 
 
 @printAndInsertWrapper
 def insertAndScrollToEnd(self, arg2, end='\n'):
-    self.insert('end', str(arg2)+end)
+    self.insert('end', str(arg2) + end)
     self.yview_moveto(1)
 
 
-class CBJQ_SS_FrontEnd_tk:
+def getPaddingTuple_Regular(self) -> Tuple[int]:
+    rawtuple = self['padding']
+    retv = [int(str(x)) for x in rawtuple]
+    if len(rawtuple) != 4:
+        retv = retv[:2] + retv[:2]
+    # print(self, retv)
+    return tuple(retv)
 
+
+class CBJQ_SS_FrontEnd_tk:
     server_list: Dict[str, str]
     backend_path: str
     displayLog_frame_state: bool
@@ -69,9 +78,12 @@ class CBJQ_SS_FrontEnd_tk:
         self.main_frame_style.configure('main_frame.TFrame', background='lightgrey')
         # Define main_frame
         self.main_frame = ttk.Frame(self.root_window, padding=(3, 12),
-                               width=400, height=300, style='main_frame.TFrame')
+                                    width=400, height=300, style='main_frame.TFrame')
+        self.main_frame.columnconfigure((0, 2), weight=1)
+        self.main_frame.rowconfigure(0, weight=1)
         # Define listServer_frame
         self.listServer_frame = ttk.Frame(self.main_frame, padding=(5, 5))
+        self.listServer_frame.columnconfigure(0, weight=1)
         self.listServer_frame.rowconfigure(1, weight=1)
         # Define listServer_label
         self.listServer_label_Var = tkinter.StringVar(value='预设服务器列表：')
@@ -79,7 +91,8 @@ class CBJQ_SS_FrontEnd_tk:
         # Define listServer_listbox
         self.listServer_listbox_choice = list(self.server_list.keys())
         self.listServer_listbox_choice_Var = tkinter.StringVar(value=self.listServer_listbox_choice)
-        self.listServer_listbox = tkinter.Listbox(self.listServer_frame, listvariable=self.listServer_listbox_choice_Var, width=20)
+        self.listServer_listbox = tkinter.Listbox(self.listServer_frame,
+                                                  listvariable=self.listServer_listbox_choice_Var, width=20)
         # Define doAction_frame
         self.doAction_frame = ttk.Frame(self.main_frame, padding=(5, 5))
         # Define doSwitch_button
@@ -96,11 +109,14 @@ class CBJQ_SS_FrontEnd_tk:
                                                   command=self.toggleLogDisplay)
         # Define displayLog_frame
         self.displayLog_frame = ttk.Frame(self.main_frame, padding=(5, 5))
+        self.displayLog_frame.columnconfigure(0, weight=1)
+        self.displayLog_frame.rowconfigure(1, weight=1)
         # Define displayLog_titlebar_frame
         self.displayLog_titlebar_frame = ttk.Frame(self.displayLog_frame)
         # Define displayLog_label
         self.displayLog_label_Var = tkinter.StringVar(value='日志输出：')
-        self.displayLog_label = ttk.Label(self.displayLog_titlebar_frame, textvariable=self.displayLog_label_Var, anchor=tkinter.W)
+        self.displayLog_label = ttk.Label(self.displayLog_titlebar_frame, textvariable=self.displayLog_label_Var,
+                                          anchor=tkinter.W)
         # Define displayLog_clean_button
         self.displayLog_clean_button_Var = tkinter.StringVar(value='清空')
         self.displayLog_clean_button = ttk.Button(self.displayLog_titlebar_frame,
@@ -112,14 +128,19 @@ class CBJQ_SS_FrontEnd_tk:
         # self.displayLog_text.bind('<Control C>', lambda e: self.root_window.clipboard_append(e), print('copied'))
         self.displayLog_text.bind('<Key>', lambda e: (self.root_window.clipboard_append(e)
                                                       if e.state == 12 and e.keysym == 'c' else "break"))  # Read Only
-        self.displayLog_text.insertAndScrollToEnd = partial(insertAndScrollToEnd, self.displayLog_text) # instance method
+        # self.displayLog_text.pack(fill='both', expand=True)
         # Define displayLog_label_scrollbar
         self.displayLog_text_scrollbar = ttk.Scrollbar(self.displayLog_frame, orient=tkinter.VERTICAL,
                                                        command=self.displayLog_text.yview)
-        self.displayLog_text['yscrollcommand'] = self.displayLog_text_scrollbar.set    # 设置双方回调以实现交流
+        self.displayLog_text['yscrollcommand'] = self.displayLog_text_scrollbar.set  # 设置双方回调以实现交流
         # Define statusbar
         self.statusbar_label_Var = tkinter.StringVar(value='作者: LiuJiewenTT <liuljwtt@163.com>。')
         self.statusbar_label = ttk.Label(self.root_window, textvariable=self.statusbar_label_Var, anchor=tkinter.W)
+
+        # instance methods
+        self.main_frame.getPaddingTuple_Regular = partial(getPaddingTuple_Regular, self.main_frame)
+        self.doAction_frame.getPaddingTuple_Regular = partial(getPaddingTuple_Regular, self.doAction_frame)
+        self.displayLog_text.insertAndScrollToEnd = partial(insertAndScrollToEnd, self.displayLog_text)
 
     def run(self):
         # Geometry Management
@@ -134,10 +155,16 @@ class CBJQ_SS_FrontEnd_tk:
         self.displayLog_titlebar_frame.grid(column=0, row=0, columnspan=2, sticky=tkinter_NWES)
         self.displayLog_label.grid(column=0, row=0, sticky=(tkinter.W, tkinter.S))
         self.displayLog_clean_button.grid(column=1, row=0, sticky=(tkinter.E, tkinter.S))
-        self.displayLog_text.grid(column=0, row=1, sticky=tkinter.N)
+        self.displayLog_text.grid(column=0, row=1, sticky=tkinter_NWES)
         self.displayLog_text_scrollbar.grid(column=1, row=1, sticky=(tkinter.N, tkinter.S))
         self.displayLog_clean_button.grid(column=1, row=0, sticky=(tkinter.E, tkinter.S))
         self.statusbar_label.grid(column=0, row=1, columnspan=3, sticky=(tkinter.W, tkinter.S))
+
+        self.root_window.update()
+        self.root_window.minsize(width=self.doAction_frame.winfo_width(),
+                                 height=self.doAction_frame.winfo_height() + self.statusbar_label.winfo_height()
+                                        + self.main_frame.getPaddingTuple_Regular()[1]
+                                        + self.main_frame.getPaddingTuple_Regular()[3])
         self.root_window.mainloop()
         return
 
@@ -156,20 +183,17 @@ class CBJQ_SS_FrontEnd_tk:
         self.displayLog_text.delete('1.0', tkinter.END)
 
     def execAction(self, **kwargs):
-        print(kwargs)
+        self.displayLog_text.insertAndScrollToEnd('[+]' + '运行前报告' + '=' * 15)
         self.displayLog_text.insertAndScrollToEnd(kwargs)
         launch_args = []
         if kwargs.get('action') in ['s', 's&r']:
-            print('do switch')
             self.displayLog_text.insertAndScrollToEnd('do switch')
             launch_args.append('-nopause')
             if kwargs['action'] == 's&r':
-                print('launch')
                 self.displayLog_text.insertAndScrollToEnd('launch')
             else:
                 launch_args.append('-nostart')
             curselection_idxs: tuple = self.listServer_listbox.curselection()
-            print(f'curselection: {curselection_idxs}')
             self.displayLog_text.insertAndScrollToEnd(f'curselection: {curselection_idxs}')
             if len(curselection_idxs) > 0:
                 curselection_idx = int(curselection_idxs[0])
@@ -177,17 +201,19 @@ class CBJQ_SS_FrontEnd_tk:
                 launch_args.append(curselection_value)
             launch_cmd = [self.backend_path]
             launch_cmd.extend(launch_args)
-            print(f'launch_cmd: {launch_cmd}')
-
+            self.displayLog_text.insertAndScrollToEnd(f'launch_cmd: {launch_cmd}')
             with subprocess.Popen(launch_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding='utf-8') as sp:
-                print(f'sp.pid: {sp.pid}')
+                self.displayLog_text.insertAndScrollToEnd(f'sp.pid: {sp.pid}')
+                self.displayLog_text.insertAndScrollToEnd('[+]' + '运行报告' + '-' * 15)
                 output = sp.stdout.readlines()
                 for i in output:
-                    print(f'[stdout]: {i}', end='')
+                    # print(f'[stdout]: {i}', end='')
                     # self.displayLog_text.insert('end', i)
                     # self.displayLog_text.yview_moveto(1)
-                    self.displayLog_text.insertAndScrollToEnd(i, end='')     # instance method
+                    self.displayLog_text.insertAndScrollToEnd(i, end='')  # instance method
                 print('')
+                self.displayLog_text.insertAndScrollToEnd('[-]' + '运行后报告' + '-' * 15)
+            self.displayLog_text.insertAndScrollToEnd('[-]' + '' + '=' * 15)
         pass
 
 
@@ -198,7 +224,7 @@ if __name__ == '__main__':
     argv = sys.argv
     for i in range(0, len(argv)):
         if argv[i] == '-cwd':
-            cwd = argv[i+1]
+            cwd = argv[i + 1]
             print('Old CWD: ' + os.getcwd())
             os.chdir(cwd)
             print('New CWD: ' + os.getcwd())
