@@ -18,7 +18,7 @@ def func_none(*args):
 
 def getProgramResourcePath(path):
     global frontend_programdir, build_flag
-    path = osp.join(frontend_programdir+('' if build_flag else '/../'), path)
+    path = osp.join(frontend_programdir+('' if build_flag else '/../../'), path)
     path = osp.normpath(path)
     return path
 
@@ -231,13 +231,13 @@ if __name__ == '__main__':
     backend_path = 'CBJQ_SS.main.bat'
     server_list = {'国际服': 'worldwide', 'B服': 'bilibili', '官服': 'kingsoft'}
 
-    frontend_programdir = osp.normpath(osp.dirname(__file__)+'/../')
-    # print(__file__)
-    if osp.splitext(__file__)[-1] == '.py':
+    frontend_programdir = osp.normpath(osp.dirname(__file__))
+    if osp.exists(__file__):
         build_flag = False
     else:
         build_flag = True
     print(f'frontend_programdir: {frontend_programdir}')
+    # input()
     argv = sys.argv
     for i in range(0, len(argv)):
         if argv[i] == '-cwd':
