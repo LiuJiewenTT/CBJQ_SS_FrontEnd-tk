@@ -8,11 +8,19 @@ import sys
 from typing import Dict, Tuple
 from functools import partial
 
+
 tkinter_NWES = (tkinter.N, tkinter.W, tkinter.E, tkinter.S)
 
 
 def func_none(*args):
     print('none')
+
+
+def getProgramResourcePath(path):
+    global frontend_programdir, build_flag
+    path = osp.join(frontend_programdir+('' if build_flag else '/../'), path)
+    path = osp.normpath(path)
+    return path
 
 
 def checkExecutableReadiness(exec_name: str):
@@ -67,6 +75,9 @@ class CBJQ_SS_FrontEnd_tk:
 
         self.root_window = tkinter.Tk()
         self.root_window.title("尘白禁区服务器切换器 - 前端")
+        # print(getProgramResourcePath('res/icon1.png'))
+        self.root_window.iconphoto(True, tkinter.PhotoImage(file=getProgramResourcePath('res/icon1.png')))  # 使用核心目录
+        # self.root_window.iconphoto(True, tkinter.PhotoImage(file=frontend_programdir + '/../../res/icon1.png'))
         self.root_window.rowconfigure(0, weight=1)
         self.root_window.columnconfigure(0, weight=1)
 
@@ -128,7 +139,6 @@ class CBJQ_SS_FrontEnd_tk:
         # self.displayLog_text.bind('<Control C>', lambda e: self.root_window.clipboard_append(e), print('copied'))
         self.displayLog_text.bind('<Key>', lambda e: (self.root_window.clipboard_append(e)
                                                       if e.state == 12 and e.keysym == 'c' else "break"))  # Read Only
-        # self.displayLog_text.pack(fill='both', expand=True)
         # Define displayLog_label_scrollbar
         self.displayLog_text_scrollbar = ttk.Scrollbar(self.displayLog_frame, orient=tkinter.VERTICAL,
                                                        command=self.displayLog_text.yview)
@@ -221,6 +231,13 @@ if __name__ == '__main__':
     backend_path = 'CBJQ_SS.main.bat'
     server_list = {'国际服': 'worldwide', 'B服': 'bilibili', '官服': 'kingsoft'}
 
+    frontend_programdir = osp.normpath(osp.dirname(__file__)+'/../')
+    # print(__file__)
+    if osp.splitext(__file__)[-1] == '.py':
+        build_flag = False
+    else:
+        build_flag = True
+    print(f'frontend_programdir: {frontend_programdir}')
     argv = sys.argv
     for i in range(0, len(argv)):
         if argv[i] == '-cwd':
