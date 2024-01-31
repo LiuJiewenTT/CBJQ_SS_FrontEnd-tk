@@ -198,11 +198,6 @@ class CBJQ_SS_FrontEnd_tk:
         thread.start()
 
     def execAction(self, **kwargs):
-
-        def waitlast():
-            nonlocal output
-            output = sp.stdout.readline()
-
         self.displayLog_text.insertAndScrollToEnd('[+]' + '运行前报告' + '=' * 15)
         self.displayLog_text.insertAndScrollToEnd(kwargs)
         launch_args = []
@@ -225,22 +220,15 @@ class CBJQ_SS_FrontEnd_tk:
             with subprocess.Popen(launch_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding='utf-8') as sp:
                 self.displayLog_text.insertAndScrollToEnd(f'sp.pid: {sp.pid}')
                 self.displayLog_text.insertAndScrollToEnd('[+]' + '运行报告' + '-' * 15)
-                thread = threading.Thread(target=waitlast)
-                while True:
+                while sp.poll() is None:
                     # print('to read')
                     # output = sp.communicate(timeout=1)[0]
-                    if sp.poll() is not None:
-                        thread.start()
-                        if not thread.is_alive():
-                            break
-                    else:
-                        output = sp.stdout.readline()
+                    output = sp.stdout.readline()
                     # print(f'[stdout]: {i}', end='')
                     # self.displayLog_text.insert('end', i)
                     # self.displayLog_text.yview_moveto(1)
                     self.displayLog_text.insertAndScrollToEnd(output, end='')  # instance method
                     # self.displayLog_text.update()
-                thread.join(timeout=3)
                 print('')
                 self.displayLog_text.insertAndScrollToEnd('[-]' + '运行后报告' + '-' * 15)
             self.displayLog_text.insertAndScrollToEnd('[-]' + '' + '=' * 15)
