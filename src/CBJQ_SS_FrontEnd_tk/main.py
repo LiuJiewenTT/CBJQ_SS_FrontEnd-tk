@@ -220,17 +220,21 @@ class CBJQ_SS_FrontEnd_tk:
             with subprocess.Popen(launch_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding='utf-8') as sp:
                 self.displayLog_text.insertAndScrollToEnd(f'sp.pid: {sp.pid}')
                 self.displayLog_text.insertAndScrollToEnd('[+]' + '运行报告' + '-' * 15)
-                while sp.poll() is None:
+                while True:
                     # print('to read')
                     # output = sp.communicate(timeout=1)[0]
-                    output = sp.stdout.readline()
+                    try:
+                        output = sp.stdout.__next__()
+                    except StopIteration:
+                        break
+                    # output = sp.stdout.readline()
                     # print(f'[stdout]: {i}', end='')
                     # self.displayLog_text.insert('end', i)
                     # self.displayLog_text.yview_moveto(1)
                     self.displayLog_text.insertAndScrollToEnd(output, end='')  # instance method
                     # self.displayLog_text.update()
                 print('')
-                self.displayLog_text.insertAndScrollToEnd('[-]' + '运行后报告' + '-' * 15)
+                self.displayLog_text.insertAndScrollToEnd('[-]' + f'运行后报告(pid: {sp.pid})' + '-' * 15)
             self.displayLog_text.insertAndScrollToEnd('[-]' + '' + '=' * 15)
         pass
 
