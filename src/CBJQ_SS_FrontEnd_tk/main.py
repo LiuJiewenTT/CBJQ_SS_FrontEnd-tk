@@ -7,6 +7,7 @@ import os
 import sys
 from typing import Dict, Tuple
 from functools import partial
+import threading
 
 
 tkinter_NWES = (tkinter.N, tkinter.W, tkinter.E, tkinter.S)
@@ -109,11 +110,11 @@ class CBJQ_SS_FrontEnd_tk:
         # Define doSwitch_button
         self.doSwitch_button_Var = tkinter.StringVar(value='切换')
         self.doSwitch_button = ttk.Button(self.doAction_frame, textvariable=self.doSwitch_button_Var,
-                                          command=lambda: self.execAction(action='s'))
+                                          command=lambda: self.execAction_threading(action='s'))
         # Define doSwitchAndRun_button
         self.doSwitchAndRun_button_Var = tkinter.StringVar(value='切换并启动')
         self.doSwitchAndRun_button = ttk.Button(self.doAction_frame, textvariable=self.doSwitchAndRun_button_Var,
-                                                command=lambda: self.execAction(action='s&r'))
+                                                command=lambda: self.execAction_threading(action='s&r'))
         # Define toggleLogDisplay_button
         self.toggleLogDisplay_button_Var = tkinter.StringVar(value='日志 >')
         self.toggleLogDisplay_button = ttk.Button(self.doAction_frame, textvariable=self.toggleLogDisplay_button_Var,
@@ -192,6 +193,10 @@ class CBJQ_SS_FrontEnd_tk:
     def cleanLogDisplayed(self):
         self.displayLog_text.delete('1.0', tkinter.END)
 
+    def execAction_threading(self, **kwargs):
+        thread = threading.Thread(target=self.execAction, kwargs=kwargs)
+        thread.start()
+
     def execAction(self, **kwargs):
         self.displayLog_text.insertAndScrollToEnd('[+]' + '运行前报告' + '=' * 15)
         self.displayLog_text.insertAndScrollToEnd(kwargs)
@@ -215,12 +220,15 @@ class CBJQ_SS_FrontEnd_tk:
             with subprocess.Popen(launch_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding='utf-8') as sp:
                 self.displayLog_text.insertAndScrollToEnd(f'sp.pid: {sp.pid}')
                 self.displayLog_text.insertAndScrollToEnd('[+]' + '运行报告' + '-' * 15)
-                output = sp.stdout.readlines()
-                for i in output:
+                while sp.poll() is None:
+                    # print('to read')
+                    # output = sp.communicate(timeout=1)[0]
+                    output = sp.stdout.readline()
                     # print(f'[stdout]: {i}', end='')
                     # self.displayLog_text.insert('end', i)
                     # self.displayLog_text.yview_moveto(1)
-                    self.displayLog_text.insertAndScrollToEnd(i, end='')  # instance method
+                    self.displayLog_text.insertAndScrollToEnd(output, end='')  # instance method
+                    # self.displayLog_text.update()
                 print('')
                 self.displayLog_text.insertAndScrollToEnd('[-]' + '运行后报告' + '-' * 15)
             self.displayLog_text.insertAndScrollToEnd('[-]' + '' + '=' * 15)
