@@ -20,6 +20,8 @@
 
 当前版本在当前路径下查找脚本`CBJQ_SS.main.bat`，可以通过`-cwd [path/to/script]`切换工作目录。
 
+本程序只是前端，后端/内核请转到此项目下载：<https://github.com/LiuJiewenTT/Snowbreak_ServerSwitcher>
+
 ## 程序说明
 
 版本说明：
