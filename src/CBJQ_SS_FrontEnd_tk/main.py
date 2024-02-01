@@ -5,10 +5,10 @@ import shutil
 import os.path as osp
 import os
 import sys
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Callable, Any
 from functools import partial
 import threading
-
+import unicodedata
 
 tkinter_NWES = (tkinter.N, tkinter.W, tkinter.E, tkinter.S)
 
@@ -17,20 +17,28 @@ def func_none(*args):
     print('none')
 
 
-def getProgramResourcePath(path):
+unicodeCharWidth: Callable[[str], int] = (lambda x: 2 if unicodedata.east_asian_width(x) in 'WF' else 1)
+
+lenCJK: Callable[[str], int] = lambda x: sum(unicodeCharWidth(c) for c in x)
+
+strOverDivider: Callable[[int, str, int], str] = lambda x, sign, maxcnt: x + sign * (lambda y: 0 if y < 0 else y)(
+    maxcnt - lenCJK(x))
+
+
+def getProgramResourcePath(path) -> str:
     global frontend_programdir, build_flag
-    path = osp.join(frontend_programdir+('' if build_flag else '/../../'), path)
+    path = osp.join(frontend_programdir + ('' if build_flag else '/../../'), path)
     path = osp.normpath(path)
     return path
 
 
-def checkExecutableReadiness(exec_name: str):
+def checkExecutableReadiness(exec_name: str) -> bool:
     if not osp.exists(exec_name) and not shutil.which(exec_name):
         return False
     return True
 
 
-def printAndInsertWrapper(func):
+def printAndInsertWrapper(func: Callable[[Any], Any]) -> Callable:
     def func2(*args, **kwargs):
         print_flag = kwargs.get('print')
         if print_flag is not False:
@@ -38,7 +46,7 @@ def printAndInsertWrapper(func):
             if print_flag is not None:  # print=True (by default)
                 kwargs.pop('print')
             print(args[1], end=endding)
-        func.__call__(*args, **kwargs)
+        return func.__call__(*args, **kwargs)
 
     return func2
 
@@ -62,6 +70,7 @@ class CBJQ_SS_FrontEnd_tk:
     server_list: Dict[str, str]
     backend_path: str
     displayLog_frame_state: bool
+    divider_length: int = 50
 
     def __init__(self, **kwargs):
         """初始化
@@ -79,8 +88,6 @@ class CBJQ_SS_FrontEnd_tk:
         # print(getProgramResourcePath('res/icon1.png'))
         self.root_window.iconphoto(True, tkinter.PhotoImage(file=getProgramResourcePath('res/icon1.png')))  # 使用核心目录
         # self.root_window.iconphoto(True, tkinter.PhotoImage(file=frontend_programdir + '/../../res/icon1.png'))
-        self.root_window.rowconfigure(0, weight=1)
-        self.root_window.columnconfigure(0, weight=1)
 
         # Define Section
         # 命名规则：实例名称+类名
@@ -91,12 +98,8 @@ class CBJQ_SS_FrontEnd_tk:
         # Define main_frame
         self.main_frame = ttk.Frame(self.root_window, padding=(3, 12),
                                     width=400, height=300, style='main_frame.TFrame')
-        self.main_frame.columnconfigure((0, 2), weight=1)
-        self.main_frame.rowconfigure(0, weight=1)
         # Define listServer_frame
         self.listServer_frame = ttk.Frame(self.main_frame, padding=(5, 5))
-        self.listServer_frame.columnconfigure(0, weight=1)
-        self.listServer_frame.rowconfigure(1, weight=1)
         # Define listServer_label
         self.listServer_label_Var = tkinter.StringVar(value='预设服务器列表：')
         self.listServer_label = ttk.Label(self.listServer_frame, textvariable=self.listServer_label_Var)
@@ -115,14 +118,16 @@ class CBJQ_SS_FrontEnd_tk:
         self.doSwitchAndRun_button_Var = tkinter.StringVar(value='切换并启动')
         self.doSwitchAndRun_button = ttk.Button(self.doAction_frame, textvariable=self.doSwitchAndRun_button_Var,
                                                 command=lambda: self.execAction_threading(action='s&r'))
+        # Define doRun_button
+        self.doRun_button_Var = tkinter.StringVar(value='直接启动')
+        self.doRun_button = ttk.Button(self.doAction_frame, textvariable=self.doRun_button_Var,
+                                       command=lambda: self.execAction_threading(action='r'))
         # Define toggleLogDisplay_button
         self.toggleLogDisplay_button_Var = tkinter.StringVar(value='日志 >')
         self.toggleLogDisplay_button = ttk.Button(self.doAction_frame, textvariable=self.toggleLogDisplay_button_Var,
                                                   command=self.toggleLogDisplay)
         # Define displayLog_frame
         self.displayLog_frame = ttk.Frame(self.main_frame, padding=(5, 5))
-        self.displayLog_frame.columnconfigure(0, weight=1)
-        self.displayLog_frame.rowconfigure(1, weight=1)
         # Define displayLog_titlebar_frame
         self.displayLog_titlebar_frame = ttk.Frame(self.displayLog_frame)
         # Define displayLog_label
@@ -155,20 +160,29 @@ class CBJQ_SS_FrontEnd_tk:
 
     def run(self):
         # Geometry Management
+        self.root_window.rowconfigure(0, weight=1)
+        self.root_window.columnconfigure(0, weight=1)
+        self.main_frame.columnconfigure((0, 2), weight=1)
+        self.main_frame.rowconfigure(0, weight=1)
         self.main_frame.grid(sticky=tkinter_NWES)
+        self.listServer_frame.columnconfigure(0, weight=1)
+        self.listServer_frame.rowconfigure(1, weight=1)
         self.listServer_frame.grid(column=0, row=0, sticky=tkinter_NWES)
         self.listServer_label.grid(column=0, row=0, sticky=(tkinter.W, tkinter.S))
         self.listServer_listbox.grid(column=0, row=1, sticky=tkinter_NWES)
         self.doAction_frame.grid(column=1, row=0, rowspan=1, sticky=tkinter.N)
         self.doSwitch_button.grid(column=0, row=0)
         self.doSwitchAndRun_button.grid(column=0, row=1)
-        self.toggleLogDisplay_button.grid(column=0, row=2, sticky=tkinter.S)
+        self.doRun_button.grid(column=0, row=2)
+        self.toggleLogDisplay_button.grid(column=0, row=3, sticky=tkinter.S)
+        self.displayLog_frame.columnconfigure(0, weight=1)
+        self.displayLog_frame.rowconfigure(1, weight=1)
+        self.displayLog_titlebar_frame.columnconfigure(1, weight=1)
         self.displayLog_titlebar_frame.grid(column=0, row=0, columnspan=2, sticky=tkinter_NWES)
         self.displayLog_label.grid(column=0, row=0, sticky=(tkinter.W, tkinter.S))
         self.displayLog_clean_button.grid(column=1, row=0, sticky=(tkinter.E, tkinter.S))
         self.displayLog_text.grid(column=0, row=1, sticky=tkinter_NWES)
         self.displayLog_text_scrollbar.grid(column=1, row=1, sticky=(tkinter.N, tkinter.S))
-        self.displayLog_clean_button.grid(column=1, row=0, sticky=(tkinter.E, tkinter.S))
         self.statusbar_label.grid(column=0, row=1, columnspan=3, sticky=(tkinter.W, tkinter.S))
 
         self.root_window.update()
@@ -198,33 +212,42 @@ class CBJQ_SS_FrontEnd_tk:
         thread.start()
 
     def execAction(self, **kwargs):
-        self.displayLog_text.insertAndScrollToEnd('[+]' + '运行前报告' + '=' * 15)
+        self.displayLog_text.insertAndScrollToEnd('[+]' + strOverDivider('运行前报告', '=', self.divider_length))
         self.displayLog_text.insertAndScrollToEnd(kwargs)
         launch_args = []
-        if kwargs.get('action') in ['s', 's&r']:
+        action = kwargs.get('action')
+        if action in ['s', 's&r']:
             self.displayLog_text.insertAndScrollToEnd('do switch')
-            launch_args.append('-nopause')
-            if kwargs['action'] == 's&r':
+            if action == 's&r':
                 self.displayLog_text.insertAndScrollToEnd('launch')
             else:
                 launch_args.append('-nostart')
+        elif action in ['r']:
+            self.displayLog_text.insertAndScrollToEnd('only launch')
+            launch_args.append('-noswitch')
+
+        if launch_args or action in ['s&r']:
+            launch_args.append('-nopause')
             curselection_idxs: tuple = self.listServer_listbox.curselection()
-            self.displayLog_text.insertAndScrollToEnd(f'curselection: {curselection_idxs}')
             if len(curselection_idxs) > 0:
                 curselection_idx = int(curselection_idxs[0])
                 curselection_value = self.server_list[self.listServer_listbox_choice[curselection_idx]]
                 launch_args.append(curselection_value)
+                self.displayLog_text.insertAndScrollToEnd(
+                    f'curselection: {curselection_idxs}, [{self.listServer_listbox_choice[curselection_idx]}]')
+            else:
+                self.displayLog_text.insertAndScrollToEnd(f'curselection: {curselection_idxs}, [无]')
             launch_cmd = [self.backend_path]
             launch_cmd.extend(launch_args)
             self.displayLog_text.insertAndScrollToEnd(f'launch_cmd: {launch_cmd}')
             with subprocess.Popen(launch_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding='utf-8') as sp:
                 self.displayLog_text.insertAndScrollToEnd(f'sp.pid: {sp.pid}')
-                self.displayLog_text.insertAndScrollToEnd('[+]' + '运行报告' + '-' * 15)
+                self.displayLog_text.insertAndScrollToEnd('[+]' + strOverDivider('运行报告', '-', self.divider_length))
                 while True:
                     # print('to read')
-                    # output = sp.communicate(timeout=1)[0]
                     try:
                         output = sp.stdout.__next__()
+                        # print(output.encode())
                     except StopIteration:
                         break
                     # output = sp.stdout.readline()
@@ -234,9 +257,36 @@ class CBJQ_SS_FrontEnd_tk:
                     self.displayLog_text.insertAndScrollToEnd(output, end='')  # instance method
                     # self.displayLog_text.update()
                 print('')
-                self.displayLog_text.insertAndScrollToEnd('[-]' + f'运行后报告(pid: {sp.pid})' + '-' * 15)
-            self.displayLog_text.insertAndScrollToEnd('[-]' + '' + '=' * 15)
+                self.displayLog_text.insertAndScrollToEnd(
+                    '[-]' + strOverDivider(f'运行后报告(pid: {sp.pid})', '-', self.divider_length))
+                self.displayLog_text.insertAndScrollToEnd(f'sp.pid: {sp.pid}')
+                self.displayLog_text.insertAndScrollToEnd(f'返回值: {sp.poll()}')
+                self.displayLog_text.insertAndScrollToEnd(f'返回值表明的运行结果: {self.resolveBackendRetv(sp.returncode)}')
+            self.displayLog_text.insertAndScrollToEnd('[-]' + '' + '=' * self.divider_length)
+        else:
+            self.displayLog_text.insertAndScrollToEnd('[-]' + strOverDivider('未运行', '=', self.divider_length))
         pass
+
+    def resolveBackendRetv(self, returncode: int) -> str:
+        """
+        解析后端返回值的含义
+
+        :param returncode: 后端返回值
+        :return: 含义str
+        """
+        if returncode == 0:
+            return '正常结束'
+        elif returncode == 1:
+            return '指示未完成设定的错误，约等于未知错误。'
+        elif returncode == 2:
+            return '不存在可执行的启动器。'
+        elif returncode == 3:
+            return '切服器未找到此服务器启动选项的配置。'
+        elif returncode == 4:
+            return '目的地的启动器并非符号链接，非本程序创建。'
+        elif returncode == 5:
+            return '启动器链接失败。 '
+        return '未查找到解释'
 
 
 if __name__ == '__main__':
