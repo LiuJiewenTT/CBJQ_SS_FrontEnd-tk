@@ -1,5 +1,6 @@
 import tkinter
 from tkinter import ttk
+import tkinter.font
 import PIL
 import PIL.ImageTk
 import PIL.Image
@@ -8,7 +9,7 @@ import shutil
 import os.path as osp
 import os
 import sys
-from typing import Dict, Tuple, Callable, Any
+from typing import Dict, Tuple, Callable, Union
 from functools import partial
 import threading
 import unicodedata
@@ -24,8 +25,30 @@ unicodeCharWidth: Callable[[str], int] = (lambda x: 2 if unicodedata.east_asian_
 
 lenCJK: Callable[[str], int] = lambda x: sum(unicodeCharWidth(c) for c in x)
 
-strOverDivider: Callable[[int, str, int], str] = lambda x, sign, maxcnt: x + sign * (lambda y: 0 if y < 0 else y)(
+strOverDivider_fixed: Callable[[str, str, int], str] = lambda x, sign, maxcnt: x + sign * (lambda y: 0 if y < 0 else y)(
     maxcnt - lenCJK(x))
+
+
+def strOverDivider(string: str, sign: str, maxcnt: int, font: Union[None, tkinter.font.Font] = None,
+                   standard_font: Union[None, tkinter.font.Font] = None) -> str:
+    if font is None:
+        return strOverDivider_fixed(string, sign, maxcnt)
+    else:
+        divider = sign * maxcnt
+        if standard_font is None:
+            standard_font = tkinter.font.Font(family=tkinter.font.nametofont('TkFixedFont').actual('family'),
+                                              size=font.actual('size'))
+        # print(f'font: {font}')
+        # print(f'standard_font: {standard_font}')
+        sign_length = font.measure(sign)
+        div_length = standard_font.measure(divider)
+        str_length = font.measure(string)
+        remain_length = (lambda x: 0 if x < 0 else x)(div_length - str_length)
+        cnt = round(remain_length * 1.0 / sign_length)
+        # 不需要手动删除吧，大概？反正下面两种都可以删除。
+        # standard_font.__del__()
+        # tkinter._get_default_root('use font').call('font', 'delete', standard_font.name)
+        return string + sign * cnt
 
 
 def getProgramResourcePath(path) -> str:
@@ -157,7 +180,9 @@ class CBJQ_SS_FrontEnd_tk:
                                                   textvariable=self.displayLog_clean_button_Var,
                                                   command=self.cleanLogDisplayed)
         # Define displayLog_text
-        self.displayLog_text = tkinter.Text(self.displayLog_frame, width=100, height=30)
+        self.displayLog_text_font = tkinter.font.nametofont('TkTextFont')
+        self.displayLog_text = tkinter.Text(self.displayLog_frame, width=100, height=30,
+                                            font=self.displayLog_text_font)
         # self.displayLog_text['state'] = 'normal'
         # self.displayLog_text.bind('<Control C>', lambda e: self.root_window.clipboard_append(e), print('copied'))
         self.displayLog_text.bind('<Key>', lambda e: (self.root_window.clipboard_append(e)
@@ -244,7 +269,8 @@ class CBJQ_SS_FrontEnd_tk:
         thread.start()
 
     def execAction(self, **kwargs):
-        self.displayLog_text.insertAndScrollToEnd('[+]' + strOverDivider('运行前报告', '=', self.divider_length))
+        self.displayLog_text.insertAndScrollToEnd(strOverDivider('[+]' + '运行前报告', '=', self.divider_length,
+                                                                 self.displayLog_text_font))
         self.displayLog_text.insertAndScrollToEnd(kwargs)
         launch_args = []
         action = kwargs.get('action')
@@ -274,7 +300,8 @@ class CBJQ_SS_FrontEnd_tk:
             self.displayLog_text.insertAndScrollToEnd(f'launch_cmd: {launch_cmd}')
             with subprocess.Popen(launch_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding='utf-8') as sp:
                 self.displayLog_text.insertAndScrollToEnd(f'sp.pid: {sp.pid}')
-                self.displayLog_text.insertAndScrollToEnd('[+]' + strOverDivider('运行报告', '-', self.divider_length))
+                self.displayLog_text.insertAndScrollToEnd(strOverDivider('[+]' + '运行报告', '-', self.divider_length,
+                                                                         self.displayLog_text_font))
                 while True:
                     # print('to read')
                     try:
@@ -290,13 +317,16 @@ class CBJQ_SS_FrontEnd_tk:
                     # self.displayLog_text.update()
                 print('')
                 self.displayLog_text.insertAndScrollToEnd(
-                    '[-]' + strOverDivider(f'运行后报告(pid: {sp.pid})', '-', self.divider_length))
+                    strOverDivider('[-]' + f'运行后报告(pid: {sp.pid})', '-', self.divider_length,
+                                   self.displayLog_text_font))
                 self.displayLog_text.insertAndScrollToEnd(f'sp.pid: {sp.pid}')
                 self.displayLog_text.insertAndScrollToEnd(f'返回值: {sp.poll()}')
                 self.displayLog_text.insertAndScrollToEnd(f'返回值表明的运行结果: {self.resolveBackendRetv(sp.returncode)}')
-            self.displayLog_text.insertAndScrollToEnd('[-]' + '' + '=' * self.divider_length)
+            self.displayLog_text.insertAndScrollToEnd(strOverDivider('[-]' + '', '=', self.divider_length,
+                                                                     self.displayLog_text_font))
         else:
-            self.displayLog_text.insertAndScrollToEnd('[-]' + strOverDivider('未运行', '=', self.divider_length))
+            self.displayLog_text.insertAndScrollToEnd(strOverDivider('[-]' + '未运行', '=', self.divider_length,
+                                                                     self.displayLog_text_font))
         pass
 
     def resolveBackendRetv(self, returncode: int) -> str:
