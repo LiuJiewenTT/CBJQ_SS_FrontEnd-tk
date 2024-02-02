@@ -38,7 +38,7 @@ def checkExecutableReadiness(exec_name: str) -> bool:
     return True
 
 
-def printAndInsertWrapper(func: Callable[[Any], Any]) -> Callable:
+def printAndInsertWrapper(func):
     def func2(*args, **kwargs):
         print_flag = kwargs.get('print')
         if print_flag is not False:
@@ -134,6 +134,14 @@ class CBJQ_SS_FrontEnd_tk:
         self.displayLog_label_Var = tkinter.StringVar(value='日志输出：')
         self.displayLog_label = ttk.Label(self.displayLog_titlebar_frame, textvariable=self.displayLog_label_Var,
                                           anchor=tkinter.W)
+        # Define displayLog_wrapchar_checkbutton
+        self.displayLog_wrapchar_checkbutton_Var = tkinter.StringVar(value='自动换行')
+        self.displayLog_wrapchar_checkbutton_Val = tkinter.StringVar(value='char')  # 默认勾选
+        self.displayLog_wrapchar_checkbutton = ttk.Checkbutton(self.displayLog_titlebar_frame,
+                                                               textvariable=self.displayLog_wrapchar_checkbutton_Var,
+                                                               variable=self.displayLog_wrapchar_checkbutton_Val,
+                                                               onvalue='char', offvalue='none',
+                                                               command=self.toggleLogLineWrapStyle)
         # Define displayLog_clean_button
         self.displayLog_clean_button_Var = tkinter.StringVar(value='清空')
         self.displayLog_clean_button = ttk.Button(self.displayLog_titlebar_frame,
@@ -162,12 +170,12 @@ class CBJQ_SS_FrontEnd_tk:
         # Geometry Management
         self.root_window.rowconfigure(0, weight=1)
         self.root_window.columnconfigure(0, weight=1)
+        self.main_frame.grid(sticky=tkinter_NWES)
         self.main_frame.columnconfigure((0, 2), weight=1)
         self.main_frame.rowconfigure(0, weight=1)
-        self.main_frame.grid(sticky=tkinter_NWES)
+        self.listServer_frame.grid(column=0, row=0, sticky=tkinter_NWES)
         self.listServer_frame.columnconfigure(0, weight=1)
         self.listServer_frame.rowconfigure(1, weight=1)
-        self.listServer_frame.grid(column=0, row=0, sticky=tkinter_NWES)
         self.listServer_label.grid(column=0, row=0, sticky=(tkinter.W, tkinter.S))
         self.listServer_listbox.grid(column=0, row=1, sticky=tkinter_NWES)
         self.doAction_frame.grid(column=1, row=0, rowspan=1, sticky=tkinter.N)
@@ -177,10 +185,11 @@ class CBJQ_SS_FrontEnd_tk:
         self.toggleLogDisplay_button.grid(column=0, row=3, sticky=tkinter.S)
         self.displayLog_frame.columnconfigure(0, weight=1)
         self.displayLog_frame.rowconfigure(1, weight=1)
-        self.displayLog_titlebar_frame.columnconfigure(1, weight=1)
         self.displayLog_titlebar_frame.grid(column=0, row=0, columnspan=2, sticky=tkinter_NWES)
+        self.displayLog_titlebar_frame.columnconfigure((2,), weight=1)
         self.displayLog_label.grid(column=0, row=0, sticky=(tkinter.W, tkinter.S))
-        self.displayLog_clean_button.grid(column=1, row=0, sticky=(tkinter.E, tkinter.S))
+        self.displayLog_wrapchar_checkbutton.grid(column=1, row=0, sticky=(tkinter.E, tkinter.S))
+        self.displayLog_clean_button.grid(column=2, row=0, sticky=(tkinter.E, tkinter.S))
         self.displayLog_text.grid(column=0, row=1, sticky=tkinter_NWES)
         self.displayLog_text_scrollbar.grid(column=1, row=1, sticky=(tkinter.N, tkinter.S))
         self.statusbar_label.grid(column=0, row=1, columnspan=3, sticky=(tkinter.W, tkinter.S))
@@ -203,6 +212,13 @@ class CBJQ_SS_FrontEnd_tk:
             self.displayLog_frame.grid(column=2, row=0, rowspan=1, sticky=tkinter_NWES)
             self.toggleLogDisplay_button_Var.set('日志 <')
         return
+
+    def toggleLogLineWrapStyle(self):
+        # print(self.displayLog_wrapchar_checkbutton_Val.get())
+        if self.displayLog_wrapchar_checkbutton_Val.get() == 'char':
+            self.displayLog_text.configure(wrap='char')
+        elif self.displayLog_wrapchar_checkbutton_Val.get() == 'none':
+            self.displayLog_text.configure(wrap='none')
 
     def cleanLogDisplayed(self):
         self.displayLog_text.delete('1.0', tkinter.END)
