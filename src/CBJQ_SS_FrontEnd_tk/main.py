@@ -1,5 +1,8 @@
 import tkinter
 from tkinter import ttk
+import PIL
+import PIL.ImageTk
+import PIL.Image
 import subprocess
 import shutil
 import os.path as osp
@@ -88,6 +91,12 @@ class CBJQ_SS_FrontEnd_tk:
         # print(getProgramResourcePath('res/icon1.png'))
         self.root_window.iconphoto(True, tkinter.PhotoImage(file=getProgramResourcePath('res/icon1.png')))  # 使用核心目录
         # self.root_window.iconphoto(True, tkinter.PhotoImage(file=frontend_programdir + '/../../res/icon1.png'))
+        # Dev: define img
+        # self.img1 = PIL.ImageTk.PhotoImage(PIL.Image.open(getProgramResourcePath('res/让芙提雅老师看看谁在色色.jpg')))
+        # self.root_window.wm_attributes('-transparentcolor', 'lightgrey')
+        # self.root_window.wm_attributes('-alpha', '0.9')
+        # self.background_label_1 = ttk.Label(self.main_frame, image=self.img1)
+        # self.background_label_1.place(x=0, y=0, relwidth=1, relheight=1)
 
         # Define Section
         # 命名规则：实例名称+类名
@@ -153,10 +162,14 @@ class CBJQ_SS_FrontEnd_tk:
         # self.displayLog_text.bind('<Control C>', lambda e: self.root_window.clipboard_append(e), print('copied'))
         self.displayLog_text.bind('<Key>', lambda e: (self.root_window.clipboard_append(e)
                                                       if e.state == 12 and e.keysym == 'c' else "break"))  # Read Only
-        # Define displayLog_label_scrollbar
+        # Define displayLog_text_scrollbar
         self.displayLog_text_scrollbar = ttk.Scrollbar(self.displayLog_frame, orient=tkinter.VERTICAL,
                                                        command=self.displayLog_text.yview)
         self.displayLog_text['yscrollcommand'] = self.displayLog_text_scrollbar.set  # 设置双方回调以实现交流
+        # Define displayLog_text_scrollbar_x
+        self.displayLog_text_scrollbar_x = ttk.Scrollbar(self.displayLog_frame, orient=tkinter.HORIZONTAL,
+                                                         command=self.displayLog_text.xview)
+        self.displayLog_text['xscrollcommand'] = self.displayLog_text_scrollbar_x.set
         # Define statusbar
         self.statusbar_label_Var = tkinter.StringVar(value='作者: LiuJiewenTT <liuljwtt@163.com>。')
         self.statusbar_label = ttk.Label(self.root_window, textvariable=self.statusbar_label_Var, anchor=tkinter.W)
@@ -192,6 +205,7 @@ class CBJQ_SS_FrontEnd_tk:
         self.displayLog_clean_button.grid(column=2, row=0, sticky=(tkinter.E, tkinter.S))
         self.displayLog_text.grid(column=0, row=1, sticky=tkinter_NWES)
         self.displayLog_text_scrollbar.grid(column=1, row=1, sticky=(tkinter.N, tkinter.S))
+        # self.displayLog_text_scrollbar_x.grid(column=0, row=2, sticky=(tkinter.W, tkinter.N, tkinter.E))
         self.statusbar_label.grid(column=0, row=1, columnspan=3, sticky=(tkinter.W, tkinter.S))
 
         self.root_window.update()
@@ -217,8 +231,10 @@ class CBJQ_SS_FrontEnd_tk:
         # print(self.displayLog_wrapchar_checkbutton_Val.get())
         if self.displayLog_wrapchar_checkbutton_Val.get() == 'char':
             self.displayLog_text.configure(wrap='char')
+            self.displayLog_text_scrollbar_x.grid_forget()
         elif self.displayLog_wrapchar_checkbutton_Val.get() == 'none':
             self.displayLog_text.configure(wrap='none')
+            self.displayLog_text_scrollbar_x.grid(column=0, row=2, sticky=(tkinter.W, tkinter.N, tkinter.E))
 
     def cleanLogDisplayed(self):
         self.displayLog_text.delete('1.0', tkinter.END)
