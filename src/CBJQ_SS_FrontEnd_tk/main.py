@@ -1,17 +1,18 @@
+import subprocess
+import shutil
+import os.path as osp
+import os
+import sys
+from typing import Dict, Tuple, Callable, Union, Any
+from functools import partial
+import threading
+import orjson
 import tkinter
 from tkinter import ttk
 import tkinter.font
 import PIL
 import PIL.ImageTk
 import PIL.Image
-import subprocess
-import shutil
-import os.path as osp
-import os
-import sys
-from typing import Dict, Tuple, Callable, Union
-from functools import partial
-import threading
 import unicodedata
 
 tkinter_NWES = (tkinter.N, tkinter.W, tkinter.E, tkinter.S)
@@ -20,6 +21,8 @@ tkinter_NWES = (tkinter.N, tkinter.W, tkinter.E, tkinter.S)
 def func_none(*args):
     print('none')
 
+
+returnIfNotNone: Callable[[Any, Any], Any] = (lambda x, default: default if x is None else x)
 
 unicodeCharWidth: Callable[[str], int] = (lambda x: 2 if unicodedata.east_asian_width(x) in 'WF' else 1)
 
@@ -104,8 +107,12 @@ class CBJQ_SS_FrontEnd_tk:
         :param kwargs:  backend_path: str,
                         server_list: Dict[str, str]
         """
+        self.config: Union[None, dict] = None
+        self.config_savepath: Union[None, str] = None
         self.backend_path = kwargs.get('backend_path')
         self.server_list = kwargs.get('server_list')
+        if self.server_list is None:
+            self.server_list = {}
 
         self.displayLog_frame_state = False
 
@@ -120,6 +127,7 @@ class CBJQ_SS_FrontEnd_tk:
         # self.root_window.wm_attributes('-alpha', '0.9')
         # self.background_label_1 = ttk.Label(self.main_frame, image=self.img1)
         # self.background_label_1.place(x=0, y=0, relwidth=1, relheight=1)
+        self.root_window.protocol("WM_DELETE_WINDOW", func=self.onDeleteMainWindow)
 
         # Define Fonts
         self.text_fixed_font = tkinter.font.nametofont('TkFixedFont')
@@ -373,10 +381,86 @@ class CBJQ_SS_FrontEnd_tk:
             return '启动器链接失败。 '
         return '未查找到解释'
 
+    def ApplyConfig(self, config: dict):
+        self.config = config
+        global backend_path, server_list
+        local_backend_path = returnIfNotNone(config.get('backend_path'), backend_path)
+        self.backend_path = local_backend_path
+        local_server_list = returnIfNotNone(config.get('server_list'), server_list)
+        self.server_list.update(local_server_list)
+        self.listServer_listbox_choice = list(self.server_list.keys())
+        self.listServer_listbox_choice_Var.set(self.listServer_listbox_choice)
+        server_curselection_value = config.get('server_curselection')
+        if server_curselection_value:
+            self.listServer_listbox.select_set([self.listServer_listbox_choice.index(i) for i in server_curselection_value])
+        return
+
+    def PackConfig(self) -> dict:
+        retv: dict = self.config
+        retv['backend_path'] = self.backend_path
+        retv['server_list'] = self.server_list
+        retv['server_curselection'] = [self.listServer_listbox_choice[i] for i in self.listServer_listbox.curselection()]
+        self.config = retv
+        return retv
+
+    def WriteConfig(self, filepath: Union[str, None] = None):
+        content = orjson.dumps(self.config, option=orjson.OPT_INDENT_2)
+        if filepath is None:
+            filepath = self.config_savepath
+        print(f'Write config to: {filepath}')
+        with open(filepath, 'w', encoding='UTF-8') as f:
+            print(content.decode(encoding='UTF-8'))
+            f.write(content.decode(encoding='UTF-8'))
+        print(f'Write success.')
+
+    def onDeleteMainWindow(self):
+        self.PackConfig()
+        self.WriteConfig()
+        self.root_window.destroy()
+
+
+def changeCWD(the_new_cwd: str):
+    global cwd_old, cwd
+    if os.getcwd() == cwd:
+        return
+    cwd_old = os.getcwd()
+    print('Old CWD: ' + cwd_old)
+    cwd = the_new_cwd
+    os.chdir(cwd)
+    print('New CWD: ' + os.getcwd())
+
+
+def ApplyGlobalConfig(AppConfig: dict):
+    global backend_path, server_list, cwd
+    backend_path = returnIfNotNone(AppConfig.get('backend_path'), backend_path)
+    server_list = returnIfNotNone(AppConfig.get('server_list'), server_list)
+    changeCWD(returnIfNotNone(AppConfig.get('cwd'), cwd))
+    pass
+
+
+def PackGlobalConfig(AppConfig: dict) -> dict:
+    retv = AppConfig
+    global backend_path, server_list
+    retv['backend_path'] = backend_path
+    retv['server_list'] = server_list
+    retv['cwd'] = cwd
+    return retv
+
 
 if __name__ == '__main__':
+    config_filename = 'CBJQ_SS_FrontEnd-tk.config.json'
+    appConfig: Union[None, dict] = None
+    cwd: str = ''
+    cwd_old: str = ''
     backend_path = 'CBJQ_SS.main.bat'
     server_list = {'国际服': 'worldwide', 'B服': 'bilibili', '官服': 'kingsoft'}
+
+    if osp.exists(config_filename):
+        with open(config_filename, 'r', encoding='UTF-8') as f:
+            config_content = f.read()
+            appConfig: dict = orjson.loads(config_content)
+        if appConfig is not None:
+            ApplyGlobalConfig(appConfig)
 
     frontend_programdir = osp.normpath(osp.dirname(__file__))
     if osp.exists(__file__):
@@ -386,15 +470,24 @@ if __name__ == '__main__':
     print(f'frontend_programdir: {frontend_programdir}')
     # input()
     argv = sys.argv
+    arg_cwd = ''
     for i in range(0, len(argv)):
         if argv[i] == '-cwd':
-            cwd = argv[i + 1]
-            print('Old CWD: ' + os.getcwd())
-            os.chdir(cwd)
-            print('New CWD: ' + os.getcwd())
+            arg_cwd = argv[i + 1]
             break
+    if arg_cwd != '':
+        changeCWD(arg_cwd)
+    appConfig = PackGlobalConfig(returnIfNotNone(appConfig, {}))
 
     exec_readiness = checkExecutableReadiness('CBJQ_SS.main.bat')
     if exec_readiness is False:
         print('Executable not found.')
-    CBJQ_SS_FrontEnd_tk(backend_path=backend_path, server_list=server_list).run()
+
+    if appConfig is not None:
+        FrontEnd_instance = CBJQ_SS_FrontEnd_tk()
+        FrontEnd_instance.ApplyConfig(appConfig)
+    else:
+        FrontEnd_instance = CBJQ_SS_FrontEnd_tk(backend_path=backend_path, server_list=server_list)
+    FrontEnd_instance.config_savepath = osp.join(cwd_old, config_filename)
+    print(cwd_old)
+    FrontEnd_instance.run()
