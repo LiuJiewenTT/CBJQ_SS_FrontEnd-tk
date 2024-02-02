@@ -121,6 +121,10 @@ class CBJQ_SS_FrontEnd_tk:
         # self.background_label_1 = ttk.Label(self.main_frame, image=self.img1)
         # self.background_label_1.place(x=0, y=0, relwidth=1, relheight=1)
 
+        # Define Fonts
+        self.text_fixed_font = tkinter.font.nametofont('TkFixedFont')
+        self.text_unfixed_font = tkinter.font.nametofont('TkTextFont')
+
         # Define Section
         # 命名规则：实例名称+类名
 
@@ -174,13 +178,21 @@ class CBJQ_SS_FrontEnd_tk:
                                                                variable=self.displayLog_wrapchar_checkbutton_Val,
                                                                onvalue='char', offvalue='none',
                                                                command=self.toggleLogLineWrapStyle)
+        # Define displayLog_UseFixedFont_checkbutton
+        self.displayLog_UseFixedFont_checkbutton_Var = tkinter.StringVar(value='等宽字体')
+        self.displayLog_UseFixedFont_checkbutton_Val = tkinter.StringVar(value='unfixed')
+        self.displayLog_UseFixedFont_checkbutton = ttk.Checkbutton(self.displayLog_titlebar_frame,
+                                                                   textvariable=self.displayLog_UseFixedFont_checkbutton_Var,
+                                                                   variable=self.displayLog_UseFixedFont_checkbutton_Val,
+                                                                   onvalue='fixed', offvalue='unfixed',
+                                                                   command=self.toggleLogFontFixedChoice)
         # Define displayLog_clean_button
         self.displayLog_clean_button_Var = tkinter.StringVar(value='清空')
         self.displayLog_clean_button = ttk.Button(self.displayLog_titlebar_frame,
                                                   textvariable=self.displayLog_clean_button_Var,
                                                   command=self.cleanLogDisplayed)
         # Define displayLog_text
-        self.displayLog_text_font = tkinter.font.nametofont('TkTextFont')
+        self.displayLog_text_font = self.text_unfixed_font
         self.displayLog_text = tkinter.Text(self.displayLog_frame, width=100, height=30,
                                             font=self.displayLog_text_font)
         # self.displayLog_text['state'] = 'normal'
@@ -224,10 +236,11 @@ class CBJQ_SS_FrontEnd_tk:
         self.displayLog_frame.columnconfigure(0, weight=1)
         self.displayLog_frame.rowconfigure(1, weight=1)
         self.displayLog_titlebar_frame.grid(column=0, row=0, columnspan=2, sticky=tkinter_NWES)
-        self.displayLog_titlebar_frame.columnconfigure((2,), weight=1)
+        self.displayLog_titlebar_frame.columnconfigure((1, 2,), weight=1)
         self.displayLog_label.grid(column=0, row=0, sticky=(tkinter.W, tkinter.S))
         self.displayLog_wrapchar_checkbutton.grid(column=1, row=0, sticky=(tkinter.E, tkinter.S))
-        self.displayLog_clean_button.grid(column=2, row=0, sticky=(tkinter.E, tkinter.S))
+        self.displayLog_UseFixedFont_checkbutton.grid(column=2, row=0, sticky=(tkinter.E, tkinter.S))
+        self.displayLog_clean_button.grid(column=3, row=0, sticky=(tkinter.E, tkinter.S))
         self.displayLog_text.grid(column=0, row=1, sticky=tkinter_NWES)
         self.displayLog_text_scrollbar.grid(column=1, row=1, sticky=(tkinter.N, tkinter.S))
         # self.displayLog_text_scrollbar_x.grid(column=0, row=2, sticky=(tkinter.W, tkinter.N, tkinter.E))
@@ -260,6 +273,16 @@ class CBJQ_SS_FrontEnd_tk:
         elif self.displayLog_wrapchar_checkbutton_Val.get() == 'none':
             self.displayLog_text.configure(wrap='none')
             self.displayLog_text_scrollbar_x.grid(column=0, row=2, sticky=(tkinter.W, tkinter.N, tkinter.E))
+
+    def toggleLogFontFixedChoice(self):
+        if self.displayLog_UseFixedFont_checkbutton_Val.get() == 'fixed':
+            # print('切换到等宽字体')
+            self.displayLog_text_font = self.text_fixed_font
+            self.displayLog_text.config(font=self.text_fixed_font)
+        elif self.displayLog_UseFixedFont_checkbutton_Val.get() == 'unfixed':
+            # print('切换到非等宽字体')
+            self.displayLog_text_font = self.text_unfixed_font
+            self.displayLog_text.config(font=self.text_unfixed_font)
 
     def cleanLogDisplayed(self):
         self.displayLog_text.delete('1.0', tkinter.END)
