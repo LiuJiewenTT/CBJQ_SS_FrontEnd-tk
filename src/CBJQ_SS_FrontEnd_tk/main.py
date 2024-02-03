@@ -1,9 +1,10 @@
+import random
 import subprocess
 import shutil
 import os.path as osp
 import os
 import sys
-from typing import Dict, Tuple, Callable, Union, Any
+from typing import Dict, Tuple, Callable, Union, Any, List
 from functools import partial
 import threading
 import orjson
@@ -14,6 +15,10 @@ import PIL
 import PIL.ImageTk
 import PIL.Image
 import unicodedata
+
+# Rumtime globals
+runtime_global_standard_font: tkinter.font.Font
+runtime_global_resultBonus_pics_success_list_photoimage: List[Union[None, PIL.ImageTk.PhotoImage]]
 
 tkinter_NWES = (tkinter.N, tkinter.W, tkinter.E, tkinter.S)
 
@@ -39,8 +44,12 @@ def strOverDivider(string: str, sign: str, maxcnt: int, font: Union[None, tkinte
     else:
         divider = sign * maxcnt
         if standard_font is None:
-            standard_font = tkinter.font.Font(family=tkinter.font.nametofont('TkFixedFont').actual('family'),
-                                              size=font.actual('size'))
+            global runtime_global_standard_font
+            if 'runtime_global_standard_font' not in globals():
+                runtime_global_standard_font = tkinter.font.Font(
+                    family=tkinter.font.nametofont('TkFixedFont').actual('family'), size=font.actual('size'))
+            standard_font = runtime_global_standard_font
+
         # print(f'font: {font}')
         # print(f'standard_font: {standard_font}')
         sign_length = font.measure(sign)
@@ -95,11 +104,28 @@ def getPaddingTuple_Regular(self) -> Tuple[int]:
     return tuple(retv)
 
 
+def calcIMG_MAX_WHTuple(original_WH: Tuple[int, int], frame_WH: Tuple[int, int]) -> Tuple[int, int]:
+    # o_w, o_h = original_WH
+    # f_w, f_h = frame_WH
+    print(original_WH, frame_WH)
+    scale_w, scale_h = [frame_WH[i]/original_WH[i] for i in range(0, 2)]
+    scale = min(scale_w, scale_h)
+    retv = (round(original_WH[i] * scale) for i in range(2))
+    return retv
+
+
+resizeImgIntoFrame: Callable[[PIL.Image.Image, Tuple[int, int]], PIL.Image.Image] = \
+    (lambda img, framesize: img.resize(calcIMG_MAX_WHTuple(original_WH=(img.width, img.height),
+                                                           frame_WH=framesize)))
+
+
 class CBJQ_SS_FrontEnd_tk:
     server_list: Dict[str, str]
     backend_path: str
     displayLog_frame_state: bool
     divider_length: int = 50
+    resutlBonus_pics_framesize: Tuple[int, int] = (200, 200)
+    resultBonus_pics_success_list: List[Dict]
 
     def __init__(self, **kwargs):
         """初始化
@@ -122,7 +148,7 @@ class CBJQ_SS_FrontEnd_tk:
         self.root_window.iconphoto(True, tkinter.PhotoImage(file=getProgramResourcePath('res/icon1.png')))  # 使用核心目录
         # self.root_window.iconphoto(True, tkinter.PhotoImage(file=frontend_programdir + '/../../res/icon1.png'))
         # Dev: define img
-        # self.img1 = PIL.ImageTk.PhotoImage(PIL.Image.open(getProgramResourcePath('res/让芙提雅老师看看谁在色色.jpg')))
+        # self.img1 = PIL.ImageTk.PhotoImage(PIL.Image.open(getProgramResourcePath('res/让芙提雅老师看看谁在.jpg')))
         # self.root_window.wm_attributes('-transparentcolor', 'lightgrey')
         # self.root_window.wm_attributes('-alpha', '0.9')
         # self.background_label_1 = ttk.Label(self.main_frame, image=self.img1)
@@ -353,6 +379,8 @@ class CBJQ_SS_FrontEnd_tk:
                 self.displayLog_text.insertAndScrollToEnd(f'sp.pid: {sp.pid}')
                 self.displayLog_text.insertAndScrollToEnd(f'返回值: {sp.poll()}')
                 self.displayLog_text.insertAndScrollToEnd(f'返回值表明的运行结果: {self.resolveBackendRetv(sp.returncode)}')
+                self.displayInText_ResultBonus_pics(sp.returncode, self.displayLog_text)
+                self.displayLog_text.insert(tkinter.END, '\n')
             self.displayLog_text.insertAndScrollToEnd(strOverDivider('[-]' + '', '=', self.divider_length,
                                                                      self.displayLog_text_font))
         else:
@@ -381,6 +409,46 @@ class CBJQ_SS_FrontEnd_tk:
             return '启动器链接失败。 '
         return '未查找到解释'
 
+    def getResultBonus_pics_success(self, idx: Union[None, int] = None) -> Union[None, PIL.ImageTk.PhotoImage]:
+        if not self.resultBonus_pics_success_list:
+            return None
+        length_resultBonus_pics_success_list = len(self.resultBonus_pics_success_list)
+        imgidx: int
+        if idx is None:
+            imgidx = random.randrange(0, length_resultBonus_pics_success_list, 1)
+        else:
+            imgidx = idx
+            if imgidx >= length_resultBonus_pics_success_list:
+                return None
+        imginfo = self.resultBonus_pics_success_list[imgidx]
+        if imginfo:
+            imgtype = imginfo.get('isBuildin')
+            imgpath = imginfo.get('path')
+            if imgpath:
+                if imgtype is True:
+                    imgpath = getProgramResourcePath(imgpath)
+                global runtime_global_resultBonus_pics_success_list_photoimage
+                if 'runtime_global_resultBonus_pics_success_list_photoimage' not in globals():
+                    runtime_global_resultBonus_pics_success_list_photoimage = [None] * len(
+                        self.resultBonus_pics_success_list)
+                if runtime_global_resultBonus_pics_success_list_photoimage[imgidx] is None:
+                    img1 = PIL.Image.open(imgpath)
+                    img1 = resizeImgIntoFrame(img1, self.resutlBonus_pics_framesize)
+                    runtime_global_resultBonus_pics_success_list_photoimage[imgidx] = PIL.ImageTk.PhotoImage(img1)
+                img = runtime_global_resultBonus_pics_success_list_photoimage[imgidx]
+                return img
+        return None
+
+    def displayInText_ResultBonus_pics(self, returncode: int, widget: tkinter.Text, insertPosition=tkinter.END):
+        if returncode == 0:
+            img = self.getResultBonus_pics_success()
+            if img:
+                widget.image_create(insertPosition, image=img)
+                # widget.window_create(insertPosition, window=ttk.Label(image=img))
+                # widget.insert(tkinter.CURRENT, '\n')
+                # widget.insert(tkinter.CURRENT+' + 1c', '\n')
+            pass
+
     def ApplyConfig(self, config: dict):
         self.config = config
         global backend_path, server_list
@@ -391,15 +459,22 @@ class CBJQ_SS_FrontEnd_tk:
         self.listServer_listbox_choice = list(self.server_list.keys())
         self.listServer_listbox_choice_Var.set(self.listServer_listbox_choice)
         server_curselection_value = config.get('server_curselection')
+        self.resutlBonus_pics_framesize = returnIfNotNone(config.get('resutlBonus_pics_framesize'),
+                                                          self.resutlBonus_pics_framesize)
         if server_curselection_value:
-            self.listServer_listbox.select_set([self.listServer_listbox_choice.index(i) for i in server_curselection_value])
+            self.listServer_listbox.select_set(
+                [self.listServer_listbox_choice.index(i) for i in server_curselection_value])
+        self.resultBonus_pics_success_list = config.get('resultBonus_pics_success_list')
         return
 
     def PackConfig(self) -> dict:
         retv: dict = self.config
         retv['backend_path'] = self.backend_path
         retv['server_list'] = self.server_list
-        retv['server_curselection'] = [self.listServer_listbox_choice[i] for i in self.listServer_listbox.curselection()]
+        retv['server_curselection'] = [self.listServer_listbox_choice[i] for i in
+                                       self.listServer_listbox.curselection()]
+        retv['resutlBonus_pics_framesize'] = self.resutlBonus_pics_framesize
+        retv['resultBonus_pics_success_list'] = self.resultBonus_pics_success_list
         self.config = retv
         return retv
 
