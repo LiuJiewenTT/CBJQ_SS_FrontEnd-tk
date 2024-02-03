@@ -70,6 +70,9 @@ def getProgramResourcePath(path) -> str:
     return path
 
 
+getNonBuildinProgramResourcePath: Callable[[str], str] = lambda x: osp.join(cwd_initial, x)
+
+
 def checkExecutableReadiness(exec_name: str) -> bool:
     if not osp.exists(exec_name) and not shutil.which(exec_name):
         return False
@@ -107,7 +110,7 @@ def getPaddingTuple_Regular(self) -> Tuple[int]:
 def calcIMG_MAX_WHTuple(original_WH: Tuple[int, int], frame_WH: Tuple[int, int]) -> Tuple[int, int]:
     # o_w, o_h = original_WH
     # f_w, f_h = frame_WH
-    print(original_WH, frame_WH)
+    # print(original_WH, frame_WH)
     scale_w, scale_h = [frame_WH[i]/original_WH[i] for i in range(0, 2)]
     scale = min(scale_w, scale_h)
     retv = (round(original_WH[i] * scale) for i in range(2))
@@ -119,6 +122,51 @@ resizeImgIntoFrame: Callable[[PIL.Image.Image, Tuple[int, int]], PIL.Image.Image
                                                            frame_WH=framesize)))
 
 
+class CBJQ_SS_FrontEnd_tk_Splash:
+    splash_photoimg: PIL.ImageTk.PhotoImage
+    broken: bool = False
+    isRandom: bool = True
+
+    def __init__(self, imgpathinfolist: List[Dict[str, str]], size: Tuple[int, int] = (640, 360), isRandom: bool = True):
+        idx = 0
+        if len(imgpathinfolist) <= 0:
+            self.broken = True
+            return
+        self.isRandom = isRandom
+        if isRandom:
+            idx = random.randrange(0, len(imgpathinfolist), 1)
+        imgpathinfo = imgpathinfolist[idx]
+        imgpath = imgpathinfo.get('path')
+        imgtype = imgpathinfo.get('type')
+        if not imgpath:
+            self.broken = True
+            return
+        if imgtype == 'buildin':
+            imgpath = getProgramResourcePath(imgpath)
+        elif imgtype == 'nonbuildin':
+            imgpath = getNonBuildinProgramResourcePath(imgpath)
+        self.root_window = tkinter.Tk()
+        self.splash_photoimg = PIL.ImageTk.PhotoImage(resizeImgIntoFrame(PIL.Image.open(imgpath), size))
+        self.splash_label = ttk.Label(self.root_window, image=self.splash_photoimg)
+        # self.root_window.overrideredirect(1)  # 暂时注释
+        # self.root_window.wm_attributes('-transparentcolor', "white")
+        # self.root_window.wm_attributes('-topmost', True)
+        # self.root_window.wm_attributes('-disabled', True)
+
+    def run(self):
+        if self.broken:
+            return
+        self.splash_label.pack()
+        # 还需修改，有偏移
+        self.root_window.eval('tk::PlaceWindow . center')
+        self.splash_label.mainloop()
+        pass
+
+    def destory(self):
+        self.splash_photoimg.__del__()
+        self.root_window.destroy()
+
+
 class CBJQ_SS_FrontEnd_tk:
     server_list: Dict[str, str]
     backend_path: str
@@ -126,6 +174,7 @@ class CBJQ_SS_FrontEnd_tk:
     divider_length: int = 50
     resutlBonus_pics_framesize: Tuple[int, int] = (200, 200)
     resultBonus_pics_success_list: List[Dict]
+    resultBonus_pics_fail_list: List[Dict]
 
     def __init__(self, **kwargs):
         """初始化
@@ -379,8 +428,8 @@ class CBJQ_SS_FrontEnd_tk:
                 self.displayLog_text.insertAndScrollToEnd(f'sp.pid: {sp.pid}')
                 self.displayLog_text.insertAndScrollToEnd(f'返回值: {sp.poll()}')
                 self.displayLog_text.insertAndScrollToEnd(f'返回值表明的运行结果: {self.resolveBackendRetv(sp.returncode)}')
-                self.displayInText_ResultBonus_pics(sp.returncode, self.displayLog_text)
-                self.displayLog_text.insert(tkinter.END, '\n')
+                if self.displayInText_ResultBonus_pics(sp.returncode, self.displayLog_text):
+                    self.displayLog_text.insert(tkinter.END, '\n')
             self.displayLog_text.insertAndScrollToEnd(strOverDivider('[-]' + '', '=', self.divider_length,
                                                                      self.displayLog_text_font))
         else:
@@ -410,6 +459,12 @@ class CBJQ_SS_FrontEnd_tk:
         return '未查找到解释'
 
     def getResultBonus_pics_success(self, idx: Union[None, int] = None) -> Union[None, PIL.ImageTk.PhotoImage]:
+        """
+        获取结果奖励表情包(成功时)。此函数与失败时几乎相同，由于还没有想到优雅的整合方式，故分成两个函数。
+
+        :param idx: [可选] 指定序号为idx的表情包
+        :return: 表情包
+        """
         if not self.resultBonus_pics_success_list:
             return None
         length_resultBonus_pics_success_list = len(self.resultBonus_pics_success_list)
@@ -422,11 +477,14 @@ class CBJQ_SS_FrontEnd_tk:
                 return None
         imginfo = self.resultBonus_pics_success_list[imgidx]
         if imginfo:
-            imgtype = imginfo.get('isBuildin')
+            imgtype = imginfo.get('type')
             imgpath = imginfo.get('path')
             if imgpath:
-                if imgtype is True:
+                # print(imgtype)
+                if imgtype == 'buildin':
                     imgpath = getProgramResourcePath(imgpath)
+                elif imgtype == 'nonbuildin':
+                    imgpath = getNonBuildinProgramResourcePath(imgpath)
                 global runtime_global_resultBonus_pics_success_list_photoimage
                 if 'runtime_global_resultBonus_pics_success_list_photoimage' not in globals():
                     runtime_global_resultBonus_pics_success_list_photoimage = [None] * len(
@@ -438,16 +496,58 @@ class CBJQ_SS_FrontEnd_tk:
                 img = runtime_global_resultBonus_pics_success_list_photoimage[imgidx]
                 return img
         return None
+    
+    def getResultBonus_pics_fail(self, idx: Union[None, int] = None) -> Union[None, PIL.ImageTk.PhotoImage]:
+        """
+        获取结果奖励表情包(失败时)。此函数与成功时几乎相同，由于还没有想到优雅的整合方式，故分成两个函数。
 
-    def displayInText_ResultBonus_pics(self, returncode: int, widget: tkinter.Text, insertPosition=tkinter.END):
+        :param idx: [可选] 指定序号为idx的表情包
+        :return: 表情包
+        """
+        if not self.resultBonus_pics_fail_list:
+            return None
+        length_resultBonus_pics_fail_list = len(self.resultBonus_pics_fail_list)
+        imgidx: int
+        if idx is None:
+            imgidx = random.randrange(0, length_resultBonus_pics_fail_list, 1)
+        else:
+            imgidx = idx
+            if imgidx >= length_resultBonus_pics_fail_list:
+                return None
+        imginfo = self.resultBonus_pics_fail_list[imgidx]
+        if imginfo:
+            imgtype = imginfo.get('type')
+            imgpath = imginfo.get('path')
+            if imgpath:
+                # print(imgtype)
+                if imgtype == 'buildin':
+                    imgpath = getProgramResourcePath(imgpath)
+                elif imgtype == 'nonbuildin':
+                    imgpath = getNonBuildinProgramResourcePath(imgpath)
+                global runtime_global_resultBonus_pics_fail_list_photoimage
+                if 'runtime_global_resultBonus_pics_fail_list_photoimage' not in globals():
+                    runtime_global_resultBonus_pics_fail_list_photoimage = [None] * len(
+                        self.resultBonus_pics_fail_list)
+                if runtime_global_resultBonus_pics_fail_list_photoimage[imgidx] is None:
+                    img1 = PIL.Image.open(imgpath)
+                    img1 = resizeImgIntoFrame(img1, self.resutlBonus_pics_framesize)
+                    runtime_global_resultBonus_pics_fail_list_photoimage[imgidx] = PIL.ImageTk.PhotoImage(img1)
+                img = runtime_global_resultBonus_pics_fail_list_photoimage[imgidx]
+                return img
+        return None
+
+    def displayInText_ResultBonus_pics(self, returncode: int, widget: tkinter.Text, insertPosition=tkinter.END) -> bool:
         if returncode == 0:
             img = self.getResultBonus_pics_success()
-            if img:
-                widget.image_create(insertPosition, image=img)
-                # widget.window_create(insertPosition, window=ttk.Label(image=img))
-                # widget.insert(tkinter.CURRENT, '\n')
-                # widget.insert(tkinter.CURRENT+' + 1c', '\n')
-            pass
+        else:
+            img = self.getResultBonus_pics_fail()
+        if img:
+            widget.image_create(insertPosition, image=img)
+            # widget.window_create(insertPosition, window=ttk.Label(widget, image=img))
+            # widget.insert(tkinter.CURRENT, '\n')
+            # widget.insert(tkinter.CURRENT+' + 1c', '\n')
+            return True
+        return False
 
     def ApplyConfig(self, config: dict):
         self.config = config
@@ -465,6 +565,7 @@ class CBJQ_SS_FrontEnd_tk:
             self.listServer_listbox.select_set(
                 [self.listServer_listbox_choice.index(i) for i in server_curselection_value])
         self.resultBonus_pics_success_list = config.get('resultBonus_pics_success_list')
+        self.resultBonus_pics_fail_list = config.get('resultBonus_pics_fail_list')
         return
 
     def PackConfig(self) -> dict:
@@ -475,6 +576,7 @@ class CBJQ_SS_FrontEnd_tk:
                                        self.listServer_listbox.curselection()]
         retv['resutlBonus_pics_framesize'] = self.resutlBonus_pics_framesize
         retv['resultBonus_pics_success_list'] = self.resultBonus_pics_success_list
+        retv['resultBonus_pics_fail_list'] = self.resultBonus_pics_fail_list
         self.config = retv
         return retv
 
@@ -506,18 +608,26 @@ def changeCWD(the_new_cwd: str):
 
 
 def ApplyGlobalConfig(AppConfig: dict):
-    global backend_path, server_list, cwd
+    global backend_path, server_list, cwd, showSplash, splashSize, showSplashRandomly, splash_ImgPathInfoList
     backend_path = returnIfNotNone(AppConfig.get('backend_path'), backend_path)
     server_list = returnIfNotNone(AppConfig.get('server_list'), server_list)
+    showSplash = returnIfNotNone(AppConfig.get('showSplash'), showSplash)
+    splashSize = returnIfNotNone(AppConfig.get('splashSize'), splashSize)
+    showSplashRandomly = returnIfNotNone(AppConfig.get('showSplashRandomly'), showSplashRandomly)
+    splash_ImgPathInfoList = returnIfNotNone(AppConfig.get('splash_ImgPathInfoList'), splash_ImgPathInfoList)
     changeCWD(returnIfNotNone(AppConfig.get('cwd'), cwd))
     pass
 
 
 def PackGlobalConfig(AppConfig: dict) -> dict:
     retv = AppConfig
-    global backend_path, server_list
+    # global backend_path, server_list
     retv['backend_path'] = backend_path
     retv['server_list'] = server_list
+    retv['showSplash'] = showSplash
+    retv['splashSize'] = splashSize
+    retv['showSplashRandomly'] = showSplashRandomly
+    retv['splash_ImgPathInfoList'] = splash_ImgPathInfoList
     retv['cwd'] = cwd
     return retv
 
@@ -527,6 +637,11 @@ if __name__ == '__main__':
     appConfig: Union[None, dict] = None
     cwd: str = ''
     cwd_old: str = ''
+    cwd_initial: str = os.getcwd()
+    showSplash: bool = True
+    splashSize: Tuple[int, int] = (640, 360)
+    showSplashRandomly: bool = True
+    splash_ImgPathInfoList: List[Dict[str, str]] = []
     backend_path = 'CBJQ_SS.main.bat'
     server_list = {'国际服': 'worldwide', 'B服': 'bilibili', '官服': 'kingsoft'}
 
@@ -557,6 +672,12 @@ if __name__ == '__main__':
     exec_readiness = checkExecutableReadiness('CBJQ_SS.main.bat')
     if exec_readiness is False:
         print('Executable not found.')
+
+    if showSplash:
+        FrontEnd_Splash_instance = CBJQ_SS_FrontEnd_tk_Splash(imgpathinfolist=splash_ImgPathInfoList,
+                                                              size=splashSize,
+                                                              isRandom=showSplashRandomly)
+        FrontEnd_Splash_instance.run()
 
     if appConfig is not None:
         FrontEnd_instance = CBJQ_SS_FrontEnd_tk()
