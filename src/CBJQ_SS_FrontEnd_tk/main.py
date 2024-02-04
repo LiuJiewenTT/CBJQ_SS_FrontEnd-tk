@@ -29,6 +29,8 @@ def func_none(*args):
 
 returnIfNotNone: Callable[[Any, Any], Any] = (lambda x, default: default if x is None else x)
 
+returnIFNotLogicalFalse: Callable[[Any, Any], Any] = (lambda x, default: default if x else x)
+
 unicodeCharWidth: Callable[[str], int] = (lambda x: 2 if unicodedata.east_asian_width(x) in 'WF' else 1)
 
 lenCJK: Callable[[str], int] = lambda x: sum(unicodeCharWidth(c) for c in x)
@@ -111,7 +113,7 @@ def calcIMG_MAX_WHTuple(original_WH: Tuple[int, int], frame_WH: Tuple[int, int])
     # o_w, o_h = original_WH
     # f_w, f_h = frame_WH
     # print(original_WH, frame_WH)
-    scale_w, scale_h = [frame_WH[i]/original_WH[i] for i in range(0, 2)]
+    scale_w, scale_h = [frame_WH[i] / original_WH[i] for i in range(0, 2)]
     scale = min(scale_w, scale_h)
     retv = (round(original_WH[i] * scale) for i in range(2))
     return retv
@@ -122,15 +124,24 @@ resizeImgIntoFrame: Callable[[PIL.Image.Image, Tuple[int, int]], PIL.Image.Image
                                                            frame_WH=framesize)))
 
 
+def CBJQ_SS_FrontEnd_tk_Splash_instance_destory(event):
+    global FrontEnd_Splash_instance
+    FrontEnd_Splash_instance.root_window.destroy()
+
+
 class CBJQ_SS_FrontEnd_tk_Splash:
     splash_canvas: tkinter.Canvas
     canvas_size: Tuple[int, int]
-    splash_photoimg: PIL.ImageTk.PhotoImage
+    splash_img: PIL.Image.Image
+    splash_logo_img: PIL.Image.Image
+    splash_play_img: PIL.Image.Image
     broken: bool = False
     isRandom: bool = True
     logo_framesize = (480, 270)
+    play_button_framesize = (100, 100)
 
-    def __init__(self, imgpathinfolist: List[Dict[str, str]], size: Tuple[int, int] = (640, 360), isRandom: bool = True):
+    def __init__(self, imgpathinfolist: List[Dict[str, str]], size: Tuple[int, int] = (640, 360),
+                 isRandom: bool = True):
         idx = 0
         if len(imgpathinfolist) <= 0:
             self.broken = True
@@ -148,17 +159,26 @@ class CBJQ_SS_FrontEnd_tk_Splash:
             imgpath = getProgramResourcePath(imgpath)
         elif imgtype == 'nonbuildin':
             imgpath = getNonBuildinProgramResourcePath(imgpath)
+
         self.root_window = tkinter.Tk()
-        self.splash_photoimg = PIL.ImageTk.PhotoImage(resizeImgIntoFrame(PIL.Image.open(imgpath), size))
+
+        self.splash_img = PIL.Image.open(imgpath)
+        self.splash_photoimg = PIL.ImageTk.PhotoImage(resizeImgIntoFrame(self.splash_img, size))
+
         self.canvas_size = (self.splash_photoimg.width(), self.splash_photoimg.height())
         self.splash_canvas = tkinter.Canvas(self.root_window,
                                             width=self.canvas_size[0], height=self.canvas_size[1])
+        self.splash_canvas.canvas_texts = []
+
         self.splash_logo_img = PIL.Image.open(getProgramResourcePath('res\\启动页资源\\footer-logo.png'))
         self.splash_logo_photoimg = PIL.ImageTk.PhotoImage(resizeImgIntoFrame(self.splash_logo_img,
                                                                               framesize=self.logo_framesize))
         # self.splash_logo_photoimg = PIL.ImageTk.PhotoImage(resizeImgIntoFrame(self.splash_logo_img,
         #                                                                       framesize=self.logo_framesize))
-        print(self.splash_logo_img.mode)
+        self.splash_play_img = PIL.Image.open(getProgramResourcePath('res\\启动页资源\\play.png')).convert("RGBA")
+        self.splash_play_photoimg = PIL.ImageTk.PhotoImage(image=resizeImgIntoFrame(self.splash_play_img,
+                                                                                    framesize=self.play_button_framesize))
+        print(self.splash_play_img.mode)
         # self.root_window.overrideredirect(1)  # 暂时注释
         # self.root_window.wm_attributes('-transparentcolor', "white")
         # self.root_window.wm_attributes('-topmost', True)
@@ -167,17 +187,37 @@ class CBJQ_SS_FrontEnd_tk_Splash:
     def run(self):
         if self.broken:
             return
+
+        relx = lambda x: self.canvas_size[0] * x
+        rely = lambda y: self.canvas_size[1] * y
         self.splash_canvas.pack()
         self.splash_canvas.create_image(0, 0, image=self.splash_photoimg, anchor="nw")
         # self.splash_canvas.update()
-        self.splash_canvas.create_image(self.canvas_size[0]*0.5, self.canvas_size[1]*0.5,
+        self.splash_canvas.create_image(relx(0.5), rely(0.3),
                                         image=self.splash_logo_photoimg)
-        self.root_window.eval('tk::PlaceWindow . center') # 还需修改，有偏移
+        self.splash_canvas.canvas_texts.append(self.splash_canvas.create_text(relx(0.5), rely(0.5),
+                                                                              text='切服器',
+                                                                              fill='white',
+                                                                              font=tkinter.font.Font(self.root_window,
+                                                                                                     family=
+                                                                                                     tkinter.font.nametofont(
+                                                                                                         'TkTextFont')[
+                                                                                                         'family'],
+                                                                                                     size='-{}'.format(
+                                                                                                         int(rely(
+                                                                                                             0.1))))
+                                                                              )
+                                               )
+        self.play_button = self.splash_canvas.create_image(relx(0.5), rely(0.75), image=self.splash_play_photoimg)
+        self.splash_canvas.tag_bind(self.play_button, "<Button-1>", lambda event: self.destroy())
+        self.root_window.eval('tk::PlaceWindow . center')  # 还需修改，有偏移
         self.root_window.mainloop()
-        pass
 
-    def destory(self):
-        self.splash_photoimg.__del__()
+    def destroy(self):
+        # print('销毁')
+        # self.splash_photoimg.__del__()
+        for item in self.splash_canvas.canvas_texts:
+            self.splash_canvas.delete(item)
         self.root_window.destroy()
 
 
@@ -510,7 +550,7 @@ class CBJQ_SS_FrontEnd_tk:
                 img = runtime_global_resultBonus_pics_success_list_photoimage[imgidx]
                 return img
         return None
-    
+
     def getResultBonus_pics_fail(self, idx: Union[None, int] = None) -> Union[None, PIL.ImageTk.PhotoImage]:
         """
         获取结果奖励表情包(失败时)。此函数与成功时几乎相同，由于还没有想到优雅的整合方式，故分成两个函数。
@@ -692,6 +732,7 @@ if __name__ == '__main__':
                                                               size=splashSize,
                                                               isRandom=showSplashRandomly)
         FrontEnd_Splash_instance.run()
+        input('end of splash')
 
     if appConfig is not None:
         FrontEnd_instance = CBJQ_SS_FrontEnd_tk()
