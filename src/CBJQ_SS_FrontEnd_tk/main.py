@@ -15,6 +15,7 @@ import PIL
 import PIL.ImageTk
 import PIL.Image
 import unicodedata
+from CBJQ_SS_FrontEnd_tk.programinfo import *
 
 # Rumtime globals
 runtime_global_standard_font: tkinter.font.Font
@@ -141,7 +142,7 @@ class CBJQ_SS_FrontEnd_tk_Splash:
     play_button_framesize = (100, 100)
 
     def __init__(self, imgpathinfolist: List[Dict[str, str]], size: Tuple[int, int] = (640, 360),
-                 isRandom: bool = True):
+                 isRandom: bool = True, autoSkipTime: int = 0):
         idx = 0
         if len(imgpathinfolist) <= 0:
             self.broken = True
@@ -160,7 +161,10 @@ class CBJQ_SS_FrontEnd_tk_Splash:
         elif imgtype == 'nonbuildin':
             imgpath = getNonBuildinProgramResourcePath(imgpath)
 
+        self.autoSkipTime = autoSkipTime
+
         self.root_window = tkinter.Tk()
+        self.root_window.title(f'{product_name} - {author_name}')
 
         self.splash_img = PIL.Image.open(imgpath)
         self.splash_photoimg = PIL.ImageTk.PhotoImage(resizeImgIntoFrame(self.splash_img, size))
@@ -178,8 +182,8 @@ class CBJQ_SS_FrontEnd_tk_Splash:
         self.splash_play_img = PIL.Image.open(getProgramResourcePath('res\\启动页资源\\play.png')).convert("RGBA")
         self.splash_play_photoimg = PIL.ImageTk.PhotoImage(image=resizeImgIntoFrame(self.splash_play_img,
                                                                                     framesize=self.play_button_framesize))
-        print(self.splash_play_img.mode)
-        # self.root_window.overrideredirect(1)  # 暂时注释
+        # print(self.splash_play_img.mode)
+        self.root_window.overrideredirect(1)  # 暂时注释
         # self.root_window.wm_attributes('-transparentcolor', "white")
         # self.root_window.wm_attributes('-topmost', True)
         # self.root_window.wm_attributes('-disabled', True)
@@ -210,6 +214,8 @@ class CBJQ_SS_FrontEnd_tk_Splash:
                                                )
         self.play_button = self.splash_canvas.create_image(relx(0.5), rely(0.75), image=self.splash_play_photoimg)
         self.splash_canvas.tag_bind(self.play_button, "<Button-1>", lambda event: self.destroy())
+        if self.autoSkipTime > 250:
+            self.root_window.after(self.autoSkipTime, lambda: self.destroy())
         self.root_window.eval('tk::PlaceWindow . center')  # 还需修改，有偏移
         self.root_window.mainloop()
 
@@ -246,7 +252,7 @@ class CBJQ_SS_FrontEnd_tk:
         self.displayLog_frame_state = False
 
         self.root_window = tkinter.Tk()
-        self.root_window.title("尘白禁区服务器切换器 - 前端")
+        self.root_window.title(frontend_name)
         # print(getProgramResourcePath('res/icon1.png'))
         self.root_window.iconphoto(True, tkinter.PhotoImage(file=getProgramResourcePath('res/icon1.png')))  # 使用核心目录
         # self.root_window.iconphoto(True, tkinter.PhotoImage(file=frontend_programdir + '/../../res/icon1.png'))
@@ -345,7 +351,9 @@ class CBJQ_SS_FrontEnd_tk:
                                                          command=self.displayLog_text.xview)
         self.displayLog_text['xscrollcommand'] = self.displayLog_text_scrollbar_x.set
         # Define statusbar
-        self.statusbar_label_Var = tkinter.StringVar(value='作者: LiuJiewenTT <liuljwtt@163.com>。')
+        # self.statusbar_label_Var = tkinter.StringVar(value=f'作者: {author_name} <{author_email}>。')
+        self.statusbar_label_Var = tkinter.StringVar(
+            value=f'作者: {author_name} <{author_email}> 版本: {program_version_str}')
         self.statusbar_label = ttk.Label(self.root_window, textvariable=self.statusbar_label_Var, anchor=tkinter.W)
 
         # instance methods
@@ -388,6 +396,7 @@ class CBJQ_SS_FrontEnd_tk:
                                  height=self.doAction_frame.winfo_height() + self.statusbar_label.winfo_height()
                                         + self.main_frame.getPaddingTuple_Regular()[1]
                                         + self.main_frame.getPaddingTuple_Regular()[3])
+        # self.root_window.configure(width=self.doAction_frame.winfo_width()+self.listServer_frame.winfo_width())
         self.root_window.mainloop()
         return
 
@@ -662,10 +671,12 @@ def changeCWD(the_new_cwd: str):
 
 
 def ApplyGlobalConfig(AppConfig: dict):
-    global backend_path, server_list, cwd, showSplash, splashSize, showSplashRandomly, splash_ImgPathInfoList
+    global backend_path, server_list, cwd, \
+        showSplash, showSplash_autoSkipAfter, splashSize, showSplashRandomly, splash_ImgPathInfoList
     backend_path = returnIfNotNone(AppConfig.get('backend_path'), backend_path)
     server_list = returnIfNotNone(AppConfig.get('server_list'), server_list)
     showSplash = returnIfNotNone(AppConfig.get('showSplash'), showSplash)
+    showSplash_autoSkipAfter = returnIfNotNone(AppConfig.get('showSplash_autoSkipAfter'), 0)
     splashSize = returnIfNotNone(AppConfig.get('splashSize'), splashSize)
     showSplashRandomly = returnIfNotNone(AppConfig.get('showSplashRandomly'), showSplashRandomly)
     splash_ImgPathInfoList = returnIfNotNone(AppConfig.get('splash_ImgPathInfoList'), splash_ImgPathInfoList)
@@ -679,6 +690,7 @@ def PackGlobalConfig(AppConfig: dict) -> dict:
     retv['backend_path'] = backend_path
     retv['server_list'] = server_list
     retv['showSplash'] = showSplash
+    retv['showSplash_autoSkipAfter'] = showSplash_autoSkipAfter
     retv['splashSize'] = splashSize
     retv['showSplashRandomly'] = showSplashRandomly
     retv['splash_ImgPathInfoList'] = splash_ImgPathInfoList
@@ -693,6 +705,7 @@ if __name__ == '__main__':
     cwd_old: str = ''
     cwd_initial: str = os.getcwd()
     showSplash: bool = True
+    showSplash_autoSkipAfter: int = 0
     splashSize: Tuple[int, int] = (640, 360)
     showSplashRandomly: bool = True
     splash_ImgPathInfoList: List[Dict[str, str]] = []
@@ -730,9 +743,10 @@ if __name__ == '__main__':
     if showSplash:
         FrontEnd_Splash_instance = CBJQ_SS_FrontEnd_tk_Splash(imgpathinfolist=splash_ImgPathInfoList,
                                                               size=splashSize,
-                                                              isRandom=showSplashRandomly)
+                                                              isRandom=showSplashRandomly,
+                                                              autoSkipTime=showSplash_autoSkipAfter)
         FrontEnd_Splash_instance.run()
-        input('end of splash')
+        # input('end of splash')
 
     if appConfig is not None:
         FrontEnd_instance = CBJQ_SS_FrontEnd_tk()
