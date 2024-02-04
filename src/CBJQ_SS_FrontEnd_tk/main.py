@@ -123,9 +123,12 @@ resizeImgIntoFrame: Callable[[PIL.Image.Image, Tuple[int, int]], PIL.Image.Image
 
 
 class CBJQ_SS_FrontEnd_tk_Splash:
+    splash_canvas: tkinter.Canvas
+    canvas_size: Tuple[int, int]
     splash_photoimg: PIL.ImageTk.PhotoImage
     broken: bool = False
     isRandom: bool = True
+    logo_framesize = (480, 270)
 
     def __init__(self, imgpathinfolist: List[Dict[str, str]], size: Tuple[int, int] = (640, 360), isRandom: bool = True):
         idx = 0
@@ -147,7 +150,16 @@ class CBJQ_SS_FrontEnd_tk_Splash:
             imgpath = getNonBuildinProgramResourcePath(imgpath)
         self.root_window = tkinter.Tk()
         self.splash_photoimg = PIL.ImageTk.PhotoImage(resizeImgIntoFrame(PIL.Image.open(imgpath), size))
+        self.canvas_size = (self.splash_photoimg.width(), self.splash_photoimg.height())
+        self.splash_canvas = tkinter.Canvas(self.root_window,
+                                            width=self.canvas_size[0], height=self.canvas_size[1])
         self.splash_label = ttk.Label(self.root_window, image=self.splash_photoimg)
+        self.splash_logo_img = PIL.Image.open(getProgramResourcePath('res\\启动页资源\\footer-logo.png'))
+        print(self.splash_logo_img.mode)
+        self.splash_logo_photoimg = PIL.ImageTk.PhotoImage(self.splash_logo_img)
+        # self.splash_logo_photoimg = PIL.ImageTk.PhotoImage(resizeImgIntoFrame(self.splash_logo_img,
+        #                                                                       framesize=self.logo_framesize))
+        self.splash_logo_label = ttk.Label(self.root_window, image=self.splash_logo_photoimg, background='blue')
         # self.root_window.overrideredirect(1)  # 暂时注释
         # self.root_window.wm_attributes('-transparentcolor', "white")
         # self.root_window.wm_attributes('-topmost', True)
@@ -156,7 +168,14 @@ class CBJQ_SS_FrontEnd_tk_Splash:
     def run(self):
         if self.broken:
             return
-        self.splash_label.pack()
+        self.splash_canvas.pack()
+        self.splash_canvas.create_image(0, 0, image=self.splash_photoimg, anchor="nw")
+        # self.splash_canvas.update()
+        # self.splash_label.place(relx=.5, rely=.5, anchor=tkinter.CENTER)
+        self.splash_canvas.create_image(self.canvas_size[0]*0.5, self.canvas_size[1]*0.5,
+                                        image=self.splash_logo_photoimg)
+        # self.splash_logo_label.pack()
+        # self.splash_logo_label.place(relx=.5, rely=.5, anchor=tkinter.CENTER)
         # 还需修改，有偏移
         self.root_window.eval('tk::PlaceWindow . center')
         self.splash_label.mainloop()
