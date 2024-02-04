@@ -140,6 +140,8 @@ class CBJQ_SS_FrontEnd_tk_Splash:
     isRandom: bool = True
     logo_framesize = (480, 270)
     play_button_framesize = (100, 100)
+    close_button_framesize = (50, 50)
+    quitProgram_flag: int = 0
 
     def __init__(self, imgpathinfolist: List[Dict[str, str]], size: Tuple[int, int] = (640, 360),
                  isRandom: bool = True, autoSkipTime: int = 0):
@@ -174,7 +176,7 @@ class CBJQ_SS_FrontEnd_tk_Splash:
                                             width=self.canvas_size[0], height=self.canvas_size[1])
         self.splash_canvas.canvas_texts = []
 
-        self.splash_logo_img = PIL.Image.open(getProgramResourcePath('res\\启动页资源\\footer-logo.png'))
+        self.splash_logo_img = PIL.Image.open(getProgramResourcePath('res\\启动页资源\\logo.png'))
         self.splash_logo_photoimg = PIL.ImageTk.PhotoImage(resizeImgIntoFrame(self.splash_logo_img,
                                                                               framesize=self.logo_framesize))
         # self.splash_logo_photoimg = PIL.ImageTk.PhotoImage(resizeImgIntoFrame(self.splash_logo_img,
@@ -183,10 +185,15 @@ class CBJQ_SS_FrontEnd_tk_Splash:
         self.splash_play_photoimg = PIL.ImageTk.PhotoImage(image=resizeImgIntoFrame(self.splash_play_img,
                                                                                     framesize=self.play_button_framesize))
         # print(self.splash_play_img.mode)
-        self.root_window.overrideredirect(1)  # 暂时注释
+
+        self.splash_close_img = PIL.Image.open(getProgramResourcePath('res\\启动页资源\\close.png'))
+        self.splash_close_photoimg = PIL.ImageTk.PhotoImage(image=resizeImgIntoFrame(self.splash_close_img,
+                                                                                     framesize=self.close_button_framesize))
+        # self.root_window.overrideredirect(1)  # 暂时注释
         # self.root_window.wm_attributes('-transparentcolor', "white")
         # self.root_window.wm_attributes('-topmost', True)
         # self.root_window.wm_attributes('-disabled', True)
+        self.root_window.resizable(False, False)
 
     def run(self):
         if self.broken:
@@ -214,17 +221,23 @@ class CBJQ_SS_FrontEnd_tk_Splash:
                                                )
         self.play_button = self.splash_canvas.create_image(relx(0.5), rely(0.75), image=self.splash_play_photoimg)
         self.splash_canvas.tag_bind(self.play_button, "<Button-1>", lambda event: self.destroy())
+        self.close_button = self.splash_canvas.create_image(relx(1), rely(0),
+                                                            image=self.splash_close_photoimg, anchor="ne")
+        self.splash_canvas.tag_bind(self.close_button, "<Button-1>", lambda event: self.destroy(opt=1))
         if self.autoSkipTime > 250:
             self.root_window.after(self.autoSkipTime, lambda: self.destroy())
         self.root_window.eval('tk::PlaceWindow . center')  # 还需修改，有偏移
         self.root_window.mainloop()
+        return self.quitProgram_flag
 
-    def destroy(self):
+    def destroy(self, opt=0):
         # print('销毁')
         # self.splash_photoimg.__del__()
         for item in self.splash_canvas.canvas_texts:
             self.splash_canvas.delete(item)
         self.root_window.destroy()
+        if opt:
+            self.quitProgram_flag = opt
 
 
 class CBJQ_SS_FrontEnd_tk:
@@ -745,7 +758,9 @@ if __name__ == '__main__':
                                                               size=splashSize,
                                                               isRandom=showSplashRandomly,
                                                               autoSkipTime=showSplash_autoSkipAfter)
-        FrontEnd_Splash_instance.run()
+        retv = FrontEnd_Splash_instance.run()
+        if retv:
+            sys.exit(0)
         # input('end of splash')
 
     if appConfig is not None:
