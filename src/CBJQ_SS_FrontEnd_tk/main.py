@@ -480,32 +480,36 @@ class CBJQ_SS_FrontEnd_tk:
             launch_cmd = [self.backend_path]
             launch_cmd.extend(launch_args)
             self.displayLog_text.insertAndScrollToEnd(f'launch_cmd: {launch_cmd}')
-            with subprocess.Popen(launch_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding='utf-8') as sp:
-                self.displayLog_text.insertAndScrollToEnd(f'sp.pid: {sp.pid}')
-                self.displayLog_text.insertAndScrollToEnd(strOverDivider('[+]' + '运行报告', '-', self.divider_length,
-                                                                         self.displayLog_text_font))
-                while True:
-                    # print('to read')
-                    try:
-                        output = sp.stdout.__next__()
-                        # print(output.encode())
-                    except StopIteration:
-                        break
-                    # output = sp.stdout.readline()
-                    # print(f'[stdout]: {i}', end='')
-                    # self.displayLog_text.insert('end', i)
-                    # self.displayLog_text.yview_moveto(1)
-                    self.displayLog_text.insertAndScrollToEnd(output, end='')  # instance method
-                    # self.displayLog_text.update()
-                print('')
-                self.displayLog_text.insertAndScrollToEnd(
-                    strOverDivider('[-]' + f'运行后报告(pid: {sp.pid})', '-', self.divider_length,
-                                   self.displayLog_text_font))
-                self.displayLog_text.insertAndScrollToEnd(f'sp.pid: {sp.pid}')
-                self.displayLog_text.insertAndScrollToEnd(f'返回值: {sp.poll()}')
-                self.displayLog_text.insertAndScrollToEnd(f'返回值表明的运行结果: {self.resolveBackendRetv(sp.returncode)}')
-                if self.displayInText_ResultBonus_pics(sp.returncode, self.displayLog_text):
-                    self.displayLog_text.insert(tkinter.END, '\n')
+            exec_readiness = checkExecutableReadiness(self.backend_path)
+            if exec_readiness:
+                with subprocess.Popen(launch_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding='utf-8') as sp:
+                    self.displayLog_text.insertAndScrollToEnd(f'sp.pid: {sp.pid}')
+                    self.displayLog_text.insertAndScrollToEnd(strOverDivider('[+]' + '运行报告', '-', self.divider_length,
+                                                                             self.displayLog_text_font))
+                    while True:
+                        # print('to read')
+                        try:
+                            output = sp.stdout.__next__()
+                            # print(output.encode())
+                        except StopIteration:
+                            break
+                        # output = sp.stdout.readline()
+                        # print(f'[stdout]: {i}', end='')
+                        # self.displayLog_text.insert('end', i)
+                        # self.displayLog_text.yview_moveto(1)
+                        self.displayLog_text.insertAndScrollToEnd(output, end='')  # instance method
+                        # self.displayLog_text.update()
+                    print('')
+                    self.displayLog_text.insertAndScrollToEnd(
+                        strOverDivider('[-]' + f'运行后报告(pid: {sp.pid})', '-', self.divider_length,
+                                       self.displayLog_text_font))
+                    self.displayLog_text.insertAndScrollToEnd(f'sp.pid: {sp.pid}')
+                    self.displayLog_text.insertAndScrollToEnd(f'返回值: {sp.poll()}')
+                    self.displayLog_text.insertAndScrollToEnd(f'返回值表明的运行结果: {self.resolveBackendRetv(sp.returncode)}')
+                    if self.displayInText_ResultBonus_pics(sp.returncode, self.displayLog_text):
+                        self.displayLog_text.insert(tkinter.END, '\n')
+            else:
+                self.displayLog_text.insertAndScrollToEnd('后端程序未就绪：找不到后端程序，请移动切服器或修改切服器配置。')
             self.displayLog_text.insertAndScrollToEnd(strOverDivider('[-]' + '', '=', self.divider_length,
                                                                      self.displayLog_text_font))
         else:
@@ -674,7 +678,7 @@ class CBJQ_SS_FrontEnd_tk:
 
 def changeCWD(the_new_cwd: str):
     global cwd_old, cwd
-    if os.getcwd() == cwd:
+    if os.getcwd() == osp.abspath(osp.normpath(the_new_cwd)):
         return
     cwd_old = os.getcwd()
     print('Old CWD: ' + cwd_old)
@@ -714,7 +718,7 @@ def PackGlobalConfig(AppConfig: dict) -> dict:
 if __name__ == '__main__':
     config_filename = 'CBJQ_SS_FrontEnd-tk.config.json'
     appConfig: Union[None, dict] = None
-    cwd: str = ''
+    cwd: str = '.'
     cwd_old: str = ''
     cwd_initial: str = os.getcwd()
     showSplash: bool = True
