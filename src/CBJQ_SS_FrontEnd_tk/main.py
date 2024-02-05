@@ -167,6 +167,7 @@ class CBJQ_SS_FrontEnd_tk_Splash:
 
         self.root_window = tkinter.Tk()
         self.root_window.title(f'{product_name} - {author_name}')
+        self.root_window.iconphoto(True, tkinter.PhotoImage(file=getProgramResourcePath('res/icon1.png')))
 
         self.splash_img = PIL.Image.open(imgpath)
         self.splash_photoimg = PIL.ImageTk.PhotoImage(resizeImgIntoFrame(self.splash_img, size))
