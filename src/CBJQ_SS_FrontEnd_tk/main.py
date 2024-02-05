@@ -262,6 +262,8 @@ class CBJQ_SS_FrontEnd_tk:
         if self.server_list is None:
             self.server_list = {}
 
+        displayLog_ifWrapChar = True
+        displayLog_text_ifUseFixedFont = False
         self.displayLog_frame_state = False
 
         self.root_window = tkinter.Tk()
@@ -328,7 +330,8 @@ class CBJQ_SS_FrontEnd_tk:
                                           anchor=tkinter.W)
         # Define displayLog_wrapchar_checkbutton
         self.displayLog_wrapchar_checkbutton_Var = tkinter.StringVar(value='自动换行')
-        self.displayLog_wrapchar_checkbutton_Val = tkinter.StringVar(value='char')  # 默认勾选
+        self.displayLog_wrapchar_checkbutton_Val = tkinter.StringVar(
+            value='char' if displayLog_ifWrapChar else 'none')  # 默认勾选
         self.displayLog_wrapchar_checkbutton = ttk.Checkbutton(self.displayLog_titlebar_frame,
                                                                textvariable=self.displayLog_wrapchar_checkbutton_Var,
                                                                variable=self.displayLog_wrapchar_checkbutton_Val,
@@ -336,7 +339,8 @@ class CBJQ_SS_FrontEnd_tk:
                                                                command=self.toggleLogLineWrapStyle)
         # Define displayLog_UseFixedFont_checkbutton
         self.displayLog_UseFixedFont_checkbutton_Var = tkinter.StringVar(value='等宽字体')
-        self.displayLog_UseFixedFont_checkbutton_Val = tkinter.StringVar(value='unfixed')
+        self.displayLog_UseFixedFont_checkbutton_Val = tkinter.StringVar(
+            value='fixed' if displayLog_text_ifUseFixedFont else 'unfixed')
         self.displayLog_UseFixedFont_checkbutton = ttk.Checkbutton(self.displayLog_titlebar_frame,
                                                                    textvariable=self.displayLog_UseFixedFont_checkbutton_Var,
                                                                    variable=self.displayLog_UseFixedFont_checkbutton_Val,
@@ -482,7 +486,8 @@ class CBJQ_SS_FrontEnd_tk:
             self.displayLog_text.insertAndScrollToEnd(f'launch_cmd: {launch_cmd}')
             exec_readiness = checkExecutableReadiness(self.backend_path)
             if exec_readiness:
-                with subprocess.Popen(launch_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding='utf-8') as sp:
+                with subprocess.Popen(launch_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                      encoding='utf-8') as sp:
                     self.displayLog_text.insertAndScrollToEnd(f'sp.pid: {sp.pid}')
                     self.displayLog_text.insertAndScrollToEnd(strOverDivider('[+]' + '运行报告', '-', self.divider_length,
                                                                              self.displayLog_text_font))
@@ -639,11 +644,23 @@ class CBJQ_SS_FrontEnd_tk:
         self.listServer_listbox_choice = list(self.server_list.keys())
         self.listServer_listbox_choice_Var.set(self.listServer_listbox_choice)
         server_curselection_value = config.get('server_curselection')
-        self.resutlBonus_pics_framesize = returnIfNotNone(config.get('resutlBonus_pics_framesize'),
-                                                          self.resutlBonus_pics_framesize)
         if server_curselection_value:
             self.listServer_listbox.select_set(
                 [self.listServer_listbox_choice.index(i) for i in server_curselection_value])
+
+        displayLog_ifWrapChar = returnIfNotNone(config.get('displayLog_ifWrapChar'), True)
+        displayLog_ifWrapChar = 'char' if displayLog_ifWrapChar else 'none'
+        if displayLog_ifWrapChar != self.displayLog_wrapchar_checkbutton_Val.get():
+            self.displayLog_wrapchar_checkbutton.invoke()
+
+        displayLog_text_ifUseFixedFont = returnIfNotNone(config.get('displayLog_text_ifUseFixedFont'), False)
+        displayLog_text_ifUseFixedFont = 'fixed' if displayLog_text_ifUseFixedFont is True else 'unfixed'
+        if displayLog_text_ifUseFixedFont != self.displayLog_UseFixedFont_checkbutton_Val.get():
+            self.displayLog_UseFixedFont_checkbutton.invoke()
+        # self.displayLog_UseFixedFont_checkbutton_Val.set('fixed' if displayLog_text_ifUseFixedFont else 'unfixed')
+
+        self.resutlBonus_pics_framesize = returnIfNotNone(config.get('resutlBonus_pics_framesize'),
+                                                          self.resutlBonus_pics_framesize)
         self.resultBonus_pics_success_list = config.get('resultBonus_pics_success_list')
         self.resultBonus_pics_fail_list = config.get('resultBonus_pics_fail_list')
         return
@@ -654,6 +671,9 @@ class CBJQ_SS_FrontEnd_tk:
         retv['server_list'] = self.server_list
         retv['server_curselection'] = [self.listServer_listbox_choice[i] for i in
                                        self.listServer_listbox.curselection()]
+        retv['displayLog_ifWrapChar'] = True if self.displayLog_wrapchar_checkbutton_Val.get() == 'char' else False
+        retv['displayLog_text_ifUseFixedFont'] = \
+            True if self.displayLog_UseFixedFont_checkbutton_Val.get() == 'fixed' else False
         retv['resutlBonus_pics_framesize'] = self.resutlBonus_pics_framesize
         retv['resultBonus_pics_success_list'] = self.resultBonus_pics_success_list
         retv['resultBonus_pics_fail_list'] = self.resultBonus_pics_fail_list
