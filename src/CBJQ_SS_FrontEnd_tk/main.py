@@ -216,18 +216,19 @@ class CBJQ_SS_FrontEnd_tk_Splash:
         self.splash_close_img = PIL.Image.open(getProgramResourcePath('res\\启动页资源\\close.png'))
         self.splash_close_photoimg = PIL.ImageTk.PhotoImage(image=resizeImgIntoFrame(self.splash_close_img,
                                                                                      framesize=self.close_button_framesize))
+
         # self.root_window.overrideredirect(1)  # 暂时注释
         # self.root_window.wm_attributes('-type', 'splash')   # linux可用
         # self.root_window.wm_attributes('-transparentcolor', "white")
         # self.root_window.wm_attributes('-topmost', True)
         # self.root_window.wm_attributes('-disabled', True)
         # self.root_window.resizable(False, False)
-        hwnd: int = get_window_handle(self.root_window)
-        style: int = GetWindowLongPtrW(hwnd, GWL_STYLE)
-        # style &= ~(WS_CAPTION | WS_THICKFRAME | WS_BORDER)
-        style &= ~(WS_CAPTION | WS_THICKFRAME)
-        # style &= ~(WS_CAPTION)
-        SetWindowLongPtrW(hwnd, GWL_STYLE, style)
+        # hwnd: int = get_window_handle(self.root_window)
+        # style: int = GetWindowLongPtrW(hwnd, GWL_STYLE)
+        # # style &= ~(WS_CAPTION | WS_THICKFRAME | WS_BORDER)
+        # style &= ~(WS_CAPTION | WS_THICKFRAME)
+        # # style &= ~(WS_CAPTION)
+        # SetWindowLongPtrW(hwnd, GWL_STYLE, style)
         # self.root_window.update_idletasks()
 
     def run(self):
@@ -237,6 +238,7 @@ class CBJQ_SS_FrontEnd_tk_Splash:
         relx = lambda x: self.canvas_size[0] * x
         rely = lambda y: self.canvas_size[1] * y
         self.splash_canvas.pack()
+        self.root_window.eval('tk::PlaceWindow . center')
         self.splash_canvas.create_image(0, 0, image=self.splash_photoimg, anchor="nw")
         self.splash_canvas.create_image(relx(0.5), rely(0.3),
                                         image=self.splash_logo_photoimg)
@@ -260,7 +262,7 @@ class CBJQ_SS_FrontEnd_tk_Splash:
         self.splash_canvas.tag_bind(self.close_button, "<Button-1>", lambda event: self.destroy(opt=1))
         if self.autoSkipTime > 250:
             self.root_window.after(self.autoSkipTime, lambda: self.destroy())
-        self.root_window.eval('tk::PlaceWindow . center')  # 还需修改，有偏移
+        # self.root_window.eval('tk::PlaceWindow . center')
         self.root_window.mainloop()
         return self.quitProgram_flag
 
