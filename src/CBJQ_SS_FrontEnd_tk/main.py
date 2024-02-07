@@ -269,6 +269,7 @@ class CBJQ_SS_FrontEnd_tk:
 
         self.root_window = tkinter.Tk()
         self.root_window.title(frontend_name)
+
         # print(getProgramResourcePath('res/icon1.png'))
         self.root_window.iconphoto(True, tkinter.PhotoImage(file=getProgramResourcePath('res/icon1.png')))  # 使用核心目录
         # self.root_window.iconphoto(True, tkinter.PhotoImage(file=frontend_programdir + '/../../res/icon1.png'))
@@ -693,7 +694,10 @@ class CBJQ_SS_FrontEnd_tk:
 
     def onDeleteMainWindow(self):
         self.PackConfig()
-        self.WriteConfig()
+        if not LOCKCONFIG:
+            self.WriteConfig()
+        else:
+            print('LOCKCONFIG = True')
         self.root_window.destroy()
 
 
@@ -709,8 +713,9 @@ def changeCWD(the_new_cwd: str):
 
 
 def ApplyGlobalConfig(AppConfig: dict):
-    global backend_path, server_list, cwd, \
+    global LOCKCONFIG, backend_path, server_list, cwd, \
         showSplash, showSplash_autoSkipAfter, splashSize, showSplashRandomly, splash_ImgPathInfoList
+    LOCKCONFIG = returnIfNotNone(AppConfig.get('LOCKCONFIG'), LOCKCONFIG)
     backend_path = returnIfNotNone(AppConfig.get('backend_path'), backend_path)
     server_list = returnIfNotNone(AppConfig.get('server_list'), server_list)
     showSplash = returnIfNotNone(AppConfig.get('showSplash'), showSplash)
@@ -725,6 +730,7 @@ def ApplyGlobalConfig(AppConfig: dict):
 def PackGlobalConfig(AppConfig: dict) -> dict:
     retv = AppConfig
     # global backend_path, server_list
+    retv['LOCKCONFIG'] = LOCKCONFIG
     retv['backend_path'] = backend_path
     retv['server_list'] = server_list
     retv['showSplash'] = showSplash
@@ -739,6 +745,7 @@ def PackGlobalConfig(AppConfig: dict) -> dict:
 if __name__ == '__main__':
     config_filename = 'CBJQ_SS_FrontEnd-tk.config.json'
     appConfig: Union[None, dict] = None
+    LOCKCONFIG: bool = False
     cwd: str = '.'
     cwd_old: str = ''
     cwd_initial: str = os.getcwd()
@@ -794,5 +801,5 @@ if __name__ == '__main__':
     else:
         FrontEnd_instance = CBJQ_SS_FrontEnd_tk(backend_path=backend_path, server_list=server_list)
     FrontEnd_instance.config_savepath = osp.join(cwd_old, config_filename)
-    print(cwd_old)
+    # print(cwd_old)
     FrontEnd_instance.run()
