@@ -15,7 +15,27 @@ import PIL
 import PIL.ImageTk
 import PIL.Image
 import unicodedata
+import math
+from ctypes import windll, wintypes
 from CBJQ_SS_FrontEnd_tk.programinfo import *
+
+
+# Windows Section
+GWL_STYLE = -16
+GWLP_HWNDPARENT = -8
+WS_CAPTION = 0x00C00000
+WS_THICKFRAME = 0x00040000
+WS_BORDER = 0x00800000
+# WS_POPUP = 0x80000000
+GetWindowLongPtrW = windll.user32.GetWindowLongPtrW
+SetWindowLongPtrW = windll.user32.SetWindowLongPtrW
+
+
+def get_window_handle(root) -> int:
+    root.update_idletasks()
+    # This gets the window's parent same as `ctypes.windll.user32.GetParent`
+    return GetWindowLongPtrW(root.winfo_id(), GWLP_HWNDPARENT)
+
 
 # Rumtime globals
 runtime_global_standard_font: tkinter.font.Font
@@ -168,13 +188,23 @@ class CBJQ_SS_FrontEnd_tk_Splash:
         self.root_window = tkinter.Tk()
         self.root_window.title(f'{product_name} - {author_name}')
         self.root_window.iconphoto(True, tkinter.PhotoImage(file=getProgramResourcePath('res/icon1.png')))
+        # self.root_window['padx'] = 0
+        # self.root_window['pady'] = 0
+        self.root_window.configure(bg='blue')
 
         self.splash_img = PIL.Image.open(imgpath)
         self.splash_photoimg = PIL.ImageTk.PhotoImage(resizeImgIntoFrame(self.splash_img, size))
 
         self.canvas_size = (self.splash_photoimg.width(), self.splash_photoimg.height())
+        print(self.canvas_size)
         self.splash_canvas = tkinter.Canvas(self.root_window,
-                                            width=self.canvas_size[0], height=self.canvas_size[1])
+                                            width=self.canvas_size[0], height=self.canvas_size[1],
+                                            highlightthickness=0, selectborderwidth=0)
+        self.splash_canvas.update()
+        print(self.splash_canvas.winfo_width(), self.splash_canvas.winfo_height())
+        print(self.splash_canvas.winfo_x(), self.splash_canvas.winfo_y())
+        self.splash_canvas.configure(bg='red')
+        # self.splash_canvas.configure(bg='red', relief='flat', borderwidth='0')
         self.splash_canvas.canvas_texts = []
 
         self.splash_logo_img = PIL.Image.open(getProgramResourcePath('res\\启动页资源\\logo.png'))
@@ -191,10 +221,17 @@ class CBJQ_SS_FrontEnd_tk_Splash:
         self.splash_close_photoimg = PIL.ImageTk.PhotoImage(image=resizeImgIntoFrame(self.splash_close_img,
                                                                                      framesize=self.close_button_framesize))
         # self.root_window.overrideredirect(1)  # 暂时注释
+        # self.root_window.wm_attributes('-type', 'splash')   # linux可用
         # self.root_window.wm_attributes('-transparentcolor', "white")
         # self.root_window.wm_attributes('-topmost', True)
         # self.root_window.wm_attributes('-disabled', True)
-        self.root_window.resizable(False, False)
+        # self.root_window.resizable(False, False)
+        hwnd: int = get_window_handle(self.root_window)
+        style: int = GetWindowLongPtrW(hwnd, GWL_STYLE)
+        style &= ~(WS_CAPTION | WS_THICKFRAME | WS_BORDER)
+        # style &= ~(WS_CAPTION | WS_THICKFRAME)
+        # style &= ~(WS_CAPTION)
+        SetWindowLongPtrW(hwnd, GWL_STYLE, style)
 
     def run(self):
         if self.broken:
@@ -202,9 +239,22 @@ class CBJQ_SS_FrontEnd_tk_Splash:
 
         relx = lambda x: self.canvas_size[0] * x
         rely = lambda y: self.canvas_size[1] * y
+        self.splash_canvas.update()
+        print(self.splash_canvas.winfo_width(), self.splash_canvas.winfo_height())
         self.splash_canvas.pack()
+        # self.splash_canvas.place(x=0, y=0)
+        self.splash_canvas.update()
+        # print(self.splash_canvas.winfo_width(), self.splash_canvas.winfo_height())
+        # print(self.splash_canvas.winfo_x(), self.splash_canvas.winfo_y())
+        # print(self.splash_canvas.winfo_reqwidth(), self.splash_canvas.winfo_reqheight())
+        # print(self.splash_canvas.winfo_vrootwidth(), self.splash_canvas.winfo_vrootheight())
+        # print(self.splash_canvas.winfo_vrootx(), self.splash_canvas.winfo_vrooty())
+        print(self.splash_canvas.config())
         self.splash_canvas.create_image(0, 0, image=self.splash_photoimg, anchor="nw")
-        # self.splash_canvas.update()
+        self.splash_canvas.update()
+        print(self.splash_canvas.config())
+        print(self.splash_canvas.winfo_width(), self.splash_canvas.winfo_height())
+        print(self.splash_photoimg.width(), self.splash_photoimg.height())
         self.splash_canvas.create_image(relx(0.5), rely(0.3),
                                         image=self.splash_logo_photoimg)
         self.splash_canvas.canvas_texts.append(self.splash_canvas.create_text(relx(0.5), rely(0.5),
