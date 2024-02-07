@@ -223,13 +223,17 @@ class CBJQ_SS_FrontEnd_tk_Splash:
         # self.root_window.wm_attributes('-topmost', True)
         # self.root_window.wm_attributes('-disabled', True)
         # self.root_window.resizable(False, False)
-        # hwnd: int = get_window_handle(self.root_window)
-        # style: int = GetWindowLongPtrW(hwnd, GWL_STYLE)
-        # # style &= ~(WS_CAPTION | WS_THICKFRAME | WS_BORDER)
-        # style &= ~(WS_CAPTION | WS_THICKFRAME)
-        # # style &= ~(WS_CAPTION)
-        # SetWindowLongPtrW(hwnd, GWL_STYLE, style)
+        self.root_window.configure(width=self.canvas_size[0], height=self.canvas_size[1])
+        self.root_window.eval('tk::PlaceWindow . center')
+        hwnd: int = get_window_handle(self.root_window)
+        style: int = GetWindowLongPtrW(hwnd, GWL_STYLE)
+        # style &= ~(WS_CAPTION | WS_THICKFRAME | WS_BORDER)
+        style &= ~(WS_CAPTION | WS_THICKFRAME)
+        # style &= ~(WS_CAPTION)
+        SetWindowLongPtrW(hwnd, GWL_STYLE, style)
         # self.root_window.update_idletasks()
+        # print(self.root_window.winfo_width(), self.root_window.winfo_height())
+        # print(self.root_window.winfo_reqwidth(), self.root_window.winfo_reqheight())
 
     def run(self):
         if self.broken:
@@ -237,8 +241,11 @@ class CBJQ_SS_FrontEnd_tk_Splash:
 
         relx = lambda x: self.canvas_size[0] * x
         rely = lambda y: self.canvas_size[1] * y
+        self.root_window.configure(width=self.canvas_size[0], height=self.canvas_size[1]+1)     # 加一是似乎是tk有bug
+        self.root_window.update_idletasks()
         self.splash_canvas.pack()
-        self.root_window.eval('tk::PlaceWindow . center')
+        # self.splash_canvas.pack(padx=0, pady=0, ipadx=0, ipady=0)
+        # self.root_window.eval('tk::PlaceWindow . center')
         self.splash_canvas.create_image(0, 0, image=self.splash_photoimg, anchor="nw")
         self.splash_canvas.create_image(relx(0.5), rely(0.3),
                                         image=self.splash_logo_photoimg)
@@ -262,6 +269,13 @@ class CBJQ_SS_FrontEnd_tk_Splash:
         self.splash_canvas.tag_bind(self.close_button, "<Button-1>", lambda event: self.destroy(opt=1))
         if self.autoSkipTime > 250:
             self.root_window.after(self.autoSkipTime, lambda: self.destroy())
+        self.root_window.configure(width=self.canvas_size[0], height=self.canvas_size[1])
+        self.root_window.update()
+        print(self.root_window.winfo_width(), self.root_window.winfo_height())
+        print(self.splash_canvas.winfo_width(), self.splash_canvas.winfo_height())
+        print(self.root_window.winfo_rootx(), self.root_window.winfo_rooty())
+        print(self.root_window.winfo_vrootx(), self.root_window.winfo_vrooty())
+        print(self.root_window.winfo_x(), self.root_window.winfo_y())
         # self.root_window.eval('tk::PlaceWindow . center')
         self.root_window.mainloop()
         return self.quitProgram_flag
@@ -269,6 +283,7 @@ class CBJQ_SS_FrontEnd_tk_Splash:
     def destroy(self, opt=0):
         # print('销毁')
         # self.splash_photoimg.__del__()
+        print(self.root_window.winfo_width(), self.root_window.winfo_height())
         for item in self.splash_canvas.canvas_texts:
             self.splash_canvas.delete(item)
         self.root_window.destroy()
