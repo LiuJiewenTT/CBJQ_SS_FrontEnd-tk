@@ -26,6 +26,7 @@ GWLP_HWNDPARENT = -8
 WS_CAPTION = 0x00C00000
 WS_THICKFRAME = 0x00040000
 WS_BORDER = 0x00800000
+GWL_EXSTYLE = -20
 WS_EX_APPWINDOW = 0x00040000
 WS_EX_TOOLWINDOW = 0x00000080
 # WS_POPUP = 0x80000000
@@ -218,22 +219,30 @@ class CBJQ_SS_FrontEnd_tk_Splash:
                                                                                      framesize=self.close_button_framesize))
 
         # self.root_window.overrideredirect(1)  # 暂时注释
-        # self.root_window.wm_attributes('-type', 'splash')   # linux可用
+        # self.root_window.wm_attributes('-type', 'desktop')   # linux可用
         # self.root_window.wm_attributes('-transparentcolor', "white")
         # self.root_window.wm_attributes('-topmost', True)
         # self.root_window.wm_attributes('-disabled', True)
-        # self.root_window.resizable(False, False)
+        # self.root_window.wm_attributes('-toolwindow', False)
+
+        self.root_window.resizable(False, False)
         self.root_window.configure(width=self.canvas_size[0], height=self.canvas_size[1])
         self.root_window.eval('tk::PlaceWindow . center')
         hwnd: int = get_window_handle(self.root_window)
         style: int = GetWindowLongPtrW(hwnd, GWL_STYLE)
         # style &= ~(WS_CAPTION | WS_THICKFRAME | WS_BORDER)
-        style &= ~(WS_CAPTION | WS_THICKFRAME)
-        # style &= ~(WS_CAPTION)
+        # style &= ~(WS_CAPTION | WS_THICKFRAME)
+        # style &= ~(WS_THICKFRAME | WS_BORDER)
+        style &= ~(WS_BORDER)
+        # style &= ~(WS_THICKFRAME)
+        style &= ~(WS_CAPTION)
         SetWindowLongPtrW(hwnd, GWL_STYLE, style)
+        self.root_window.wm_sizefrom('program')
+        print('wm_frame', self.root_window.wm_frame())
+
         # self.root_window.update_idletasks()
-        # print(self.root_window.winfo_width(), self.root_window.winfo_height())
-        # print(self.root_window.winfo_reqwidth(), self.root_window.winfo_reqheight())
+        print(self.root_window.winfo_width(), self.root_window.winfo_height())
+        print(self.root_window.winfo_reqwidth(), self.root_window.winfo_reqheight())
 
     def run(self):
         if self.broken:
@@ -241,10 +250,17 @@ class CBJQ_SS_FrontEnd_tk_Splash:
 
         relx = lambda x: self.canvas_size[0] * x
         rely = lambda y: self.canvas_size[1] * y
-        self.root_window.configure(width=self.canvas_size[0], height=self.canvas_size[1]+1)     # 加一是似乎是tk有bug
+        self.root_window.configure(width=self.canvas_size[0]+1, height=self.canvas_size[1]+1)     # 加一是似乎是tk有bug
+        print(self.root_window.pack_propagate(False))
+        print(self.root_window.pack_slaves())
         self.root_window.update_idletasks()
+        print(self.splash_canvas.pack_propagate(False))
         self.splash_canvas.pack()
         # self.splash_canvas.pack(padx=0, pady=0, ipadx=0, ipady=0)
+        print(self.splash_canvas.pack_info())
+        print(self.root_window.pack_slaves())
+        print(self.splash_canvas.pack_propagate(False))
+        # self.splash_canvas.place()
         # self.root_window.eval('tk::PlaceWindow . center')
         self.splash_canvas.create_image(0, 0, image=self.splash_photoimg, anchor="nw")
         self.splash_canvas.create_image(relx(0.5), rely(0.3),
@@ -269,6 +285,7 @@ class CBJQ_SS_FrontEnd_tk_Splash:
         self.splash_canvas.tag_bind(self.close_button, "<Button-1>", lambda event: self.destroy(opt=1))
         if self.autoSkipTime > 250:
             self.root_window.after(self.autoSkipTime, lambda: self.destroy())
+
         self.root_window.configure(width=self.canvas_size[0], height=self.canvas_size[1])
         self.root_window.update()
         print(self.root_window.winfo_width(), self.root_window.winfo_height())
@@ -277,6 +294,27 @@ class CBJQ_SS_FrontEnd_tk_Splash:
         print(self.root_window.winfo_vrootx(), self.root_window.winfo_vrooty())
         print(self.root_window.winfo_x(), self.root_window.winfo_y())
         # self.root_window.eval('tk::PlaceWindow . center')
+
+        def __window_setRedirect():
+            nonlocal self
+            self.root_window.overrideredirect(True)
+
+            def set_appwindow(root):
+                hwnd = windll.user32.GetParent(root.winfo_id())
+                style = windll.user32.GetWindowLongPtrW(hwnd, GWL_EXSTYLE)
+                print(style)
+                style = style & ~WS_EX_TOOLWINDOW
+                style = style | WS_EX_APPWINDOW
+                print(style)
+                res = windll.user32.SetWindowLongPtrW(hwnd, GWL_EXSTYLE, style)
+                # re-assert the new window style    # 下面两句恢复任务栏图标
+                root.withdraw()
+                root.after(10, root.deiconify)
+
+            self.root_window.after(10, set_appwindow, self.root_window)
+
+        self.root_window.after(10, __window_setRedirect)
+
         self.root_window.mainloop()
         return self.quitProgram_flag
 
