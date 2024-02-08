@@ -19,7 +19,6 @@ import math
 from ctypes import windll, wintypes
 from CBJQ_SS_FrontEnd_tk.programinfo import *
 
-
 # Windows Section
 GWL_STYLE = -16
 GWLP_HWNDPARENT = -8
@@ -148,6 +147,24 @@ resizeImgIntoFrame: Callable[[PIL.Image.Image, Tuple[int, int]], PIL.Image.Image
                                                            frame_WH=framesize)))
 
 
+def window_setRedirect(root):
+    root.overrideredirect(True)
+
+    def set_appwindow(root):
+        hwnd = windll.user32.GetParent(root.winfo_id())
+        style = windll.user32.GetWindowLongPtrW(hwnd, GWL_EXSTYLE)
+        print(style)
+        style = style & ~WS_EX_TOOLWINDOW
+        style = style | WS_EX_APPWINDOW
+        print(style)
+        res = windll.user32.SetWindowLongPtrW(hwnd, GWL_EXSTYLE, style)
+        # re-assert the new window style    # 下面两句恢复任务栏图标
+        root.withdraw()
+        root.after(0, root.deiconify)
+
+    root.after(0, set_appwindow, root)
+
+
 def CBJQ_SS_FrontEnd_tk_Splash_instance_destory(event):
     global FrontEnd_Splash_instance
     FrontEnd_Splash_instance.root_window.destroy()
@@ -167,7 +184,7 @@ class CBJQ_SS_FrontEnd_tk_Splash:
     quitProgram_flag: int = 0
 
     def __init__(self, imgpathinfolist: List[Dict[str, str]], size: Tuple[int, int] = (640, 360),
-                 isRandom: bool = True, autoSkipTime: int = 0):
+                 isRandom: bool = True, autoSkipTime: int = 0, splashWindowKind: str = 'borderless'):
         idx = 0
         if len(imgpathinfolist) <= 0:
             self.broken = True
@@ -187,6 +204,7 @@ class CBJQ_SS_FrontEnd_tk_Splash:
             imgpath = getNonBuildinProgramResourcePath(imgpath)
 
         self.autoSkipTime = autoSkipTime
+        self.splashWindowKind = splashWindowKind
 
         self.root_window = tkinter.Tk()
         self.root_window.title(f'{product_name} - {author_name}')
@@ -225,20 +243,38 @@ class CBJQ_SS_FrontEnd_tk_Splash:
         # self.root_window.wm_attributes('-disabled', True)
         # self.root_window.wm_attributes('-toolwindow', False)
 
-        self.root_window.resizable(False, False)
+        # self.root_window.resizable(False, False)
         self.root_window.configure(width=self.canvas_size[0], height=self.canvas_size[1])
         self.root_window.eval('tk::PlaceWindow . center')
-        hwnd: int = get_window_handle(self.root_window)
-        style: int = GetWindowLongPtrW(hwnd, GWL_STYLE)
-        # style &= ~(WS_CAPTION | WS_THICKFRAME | WS_BORDER)
-        # style &= ~(WS_CAPTION | WS_THICKFRAME)
-        # style &= ~(WS_THICKFRAME | WS_BORDER)
-        style &= ~(WS_BORDER)
-        # style &= ~(WS_THICKFRAME)
-        style &= ~(WS_CAPTION)
-        SetWindowLongPtrW(hwnd, GWL_STYLE, style)
-        self.root_window.wm_sizefrom('program')
-        print('wm_frame', self.root_window.wm_frame())
+
+        # 根据splashWindowKind决定后续
+        if self.splashWindowKind == 'true-borderless':
+            # self.root_window.overrideredirect(1)
+            pass
+        elif self.splashWindowKind == 'normal':
+            pass
+        else:
+            # if self.splashWindowKind == 'grasped-in' or True:
+            #     self.root_window.resizable(False, False)
+            hwnd: int = get_window_handle(self.root_window)
+            style: int = GetWindowLongPtrW(hwnd, GWL_STYLE)
+            # style &= ~(WS_CAPTION | WS_THICKFRAME | WS_BORDER)
+            if self.splashWindowKind == 'borderless' and True:
+                style &= ~(WS_CAPTION | WS_THICKFRAME)
+                # style &= ~(WS_CAPTION)
+            elif self.splashWindowKind == 'photo-frame' and True:
+                style &= ~(WS_THICKFRAME | WS_BORDER)
+            elif self.splashWindowKind == 'grasped-in' or self.splashWindowKind == 'no-caption' and True:
+                # when resizeable
+                style &= ~(WS_BORDER)
+                # style &= ~(WS_CAPTION)    # 会添加额外padding，不如上面那句
+            elif self.splashWindowKind == 'non-resizeable-normal' and True:
+                style &= ~(WS_THICKFRAME)
+
+            SetWindowLongPtrW(hwnd, GWL_STYLE, style)
+
+            # self.root_window.wm_sizefrom('program')
+            # print('wm_frame', self.root_window.wm_frame())
 
         # self.root_window.update_idletasks()
         print(self.root_window.winfo_width(), self.root_window.winfo_height())
@@ -248,29 +284,10 @@ class CBJQ_SS_FrontEnd_tk_Splash:
         if self.broken:
             return
 
-        def __window_setRedirect():
-            nonlocal self
-            self.root_window.overrideredirect(True)
-
-            def set_appwindow(root):
-                hwnd = windll.user32.GetParent(root.winfo_id())
-                style = windll.user32.GetWindowLongPtrW(hwnd, GWL_EXSTYLE)
-                print(style)
-                style = style & ~WS_EX_TOOLWINDOW
-                style = style | WS_EX_APPWINDOW
-                print(style)
-                res = windll.user32.SetWindowLongPtrW(hwnd, GWL_EXSTYLE, style)
-                # re-assert the new window style    # 下面两句恢复任务栏图标
-                root.withdraw()
-                root.after(0, root.deiconify)
-
-            self.root_window.after(0, set_appwindow, self.root_window)
-
-        self.root_window.after(300, __window_setRedirect)
-
         relx = lambda x: self.canvas_size[0] * x
         rely = lambda y: self.canvas_size[1] * y
-        self.root_window.configure(width=self.canvas_size[0]+1, height=self.canvas_size[1]+1)     # 加一是似乎是tk有bug
+        # self.root_window.configure(width=self.canvas_size[0], height=self.canvas_size[1])
+        self.root_window.configure(width=self.canvas_size[0] + 1, height=self.canvas_size[1] + 1)  # 加一是似乎是tk有bug
         print(self.root_window.pack_propagate(False))
         print(self.root_window.pack_slaves())
         self.root_window.update_idletasks()
@@ -285,19 +302,14 @@ class CBJQ_SS_FrontEnd_tk_Splash:
         self.splash_canvas.create_image(0, 0, image=self.splash_photoimg, anchor="nw")
         self.splash_canvas.create_image(relx(0.5), rely(0.3),
                                         image=self.splash_logo_photoimg)
-        self.splash_canvas.canvas_texts.append(self.splash_canvas.create_text(relx(0.5), rely(0.5),
-                                                                              text='切服器',
-                                                                              fill='white',
-                                                                              font=tkinter.font.Font(self.root_window,
-                                                                                                     family=
-                                                                                                     tkinter.font.nametofont(
-                                                                                                         'TkTextFont')[
-                                                                                                         'family'],
-                                                                                                     size='-{}'.format(
-                                                                                                         int(rely(
-                                                                                                             0.1))))
-                                                                              )
-                                               )
+        self.splash_canvas.canvas_texts.append(
+            self.splash_canvas.create_text(relx(0.5), rely(0.5),
+                                           text='切服器', fill='white',
+                                           font=tkinter.font.Font(self.root_window,
+                                                                  family=tkinter.font.nametofont('TkTextFont')[
+                                                                      'family'],
+                                                                  size='-{}'.format(int(rely(0.1))) )))
+
         self.play_button = self.splash_canvas.create_image(relx(0.5), rely(0.75), image=self.splash_play_photoimg)
         self.splash_canvas.tag_bind(self.play_button, "<Button-1>", lambda event: self.destroy())
         self.close_button = self.splash_canvas.create_image(relx(1), rely(0),
@@ -307,13 +319,17 @@ class CBJQ_SS_FrontEnd_tk_Splash:
             self.root_window.after(self.autoSkipTime, lambda: self.destroy())
 
         self.root_window.configure(width=self.canvas_size[0], height=self.canvas_size[1])
-        self.root_window.update()
+        # self.root_window.update()
         print(self.root_window.winfo_width(), self.root_window.winfo_height())
         print(self.splash_canvas.winfo_width(), self.splash_canvas.winfo_height())
         print(self.root_window.winfo_rootx(), self.root_window.winfo_rooty())
         print(self.root_window.winfo_vrootx(), self.root_window.winfo_vrooty())
         print(self.root_window.winfo_x(), self.root_window.winfo_y())
         # self.root_window.eval('tk::PlaceWindow . center')
+
+        # 根据splashWindowKind决定后续
+        if self.splashWindowKind == 'true-borderless':
+            self.root_window.after(300, window_setRedirect, self.root_window)
 
         self.root_window.mainloop()
         return self.quitProgram_flag
@@ -802,11 +818,12 @@ def changeCWD(the_new_cwd: str):
 
 def ApplyGlobalConfig(AppConfig: dict):
     global LOCKCONFIG, backend_path, server_list, cwd, \
-        showSplash, showSplash_autoSkipAfter, splashSize, showSplashRandomly, splash_ImgPathInfoList
+        showSplash, splashWindowKind, showSplash_autoSkipAfter, splashSize, showSplashRandomly, splash_ImgPathInfoList
     LOCKCONFIG = returnIfNotNone(AppConfig.get('LOCKCONFIG'), LOCKCONFIG)
     backend_path = returnIfNotNone(AppConfig.get('backend_path'), backend_path)
     server_list = returnIfNotNone(AppConfig.get('server_list'), server_list)
     showSplash = returnIfNotNone(AppConfig.get('showSplash'), showSplash)
+    splashWindowKind = returnIfNotNone(AppConfig.get('splashWindowKind'), splashWindowKind)
     showSplash_autoSkipAfter = returnIfNotNone(AppConfig.get('showSplash_autoSkipAfter'), 0)
     splashSize = returnIfNotNone(AppConfig.get('splashSize'), splashSize)
     showSplashRandomly = returnIfNotNone(AppConfig.get('showSplashRandomly'), showSplashRandomly)
@@ -822,6 +839,7 @@ def PackGlobalConfig(AppConfig: dict) -> dict:
     retv['backend_path'] = backend_path
     retv['server_list'] = server_list
     retv['showSplash'] = showSplash
+    retv['splashWindowKind'] = splashWindowKind
     retv['showSplash_autoSkipAfter'] = showSplash_autoSkipAfter
     retv['splashSize'] = splashSize
     retv['showSplashRandomly'] = showSplashRandomly
@@ -838,6 +856,7 @@ if __name__ == '__main__':
     cwd_old: str = ''
     cwd_initial: str = os.getcwd()
     showSplash: bool = True
+    splashWindowKind: str = 'borderless'  # borderless, true-borderless, photo-frame, non-resizeable-normal （其它暂不应使用）
     showSplash_autoSkipAfter: int = 0
     splashSize: Tuple[int, int] = (640, 360)
     showSplashRandomly: bool = True
@@ -877,7 +896,8 @@ if __name__ == '__main__':
         FrontEnd_Splash_instance = CBJQ_SS_FrontEnd_tk_Splash(imgpathinfolist=splash_ImgPathInfoList,
                                                               size=splashSize,
                                                               isRandom=showSplashRandomly,
-                                                              autoSkipTime=showSplash_autoSkipAfter)
+                                                              autoSkipTime=showSplash_autoSkipAfter,
+                                                              splashWindowKind=splashWindowKind)
         retv = FrontEnd_Splash_instance.run()
         if retv:
             sys.exit(0)
