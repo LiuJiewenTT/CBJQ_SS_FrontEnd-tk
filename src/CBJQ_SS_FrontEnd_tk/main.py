@@ -148,27 +148,9 @@ resizeImgIntoFrame: Callable[[PIL.Image.Image, Tuple[int, int]], PIL.Image.Image
                                                            frame_WH=framesize)))
 
 
-def window_setRedirect(root_window):
-    root_window.overrideredirect(True)
-
-    def set_appwindow(root):
-        hwnd = windll.user32.GetParent(root.winfo_id())
-        style = windll.user32.GetWindowLongPtrW(hwnd, GWL_EXSTYLE)
-        print(style)
-        style = style & ~WS_EX_TOOLWINDOW
-        style = style | WS_EX_APPWINDOW
-        print(style)
-        res = windll.user32.SetWindowLongPtrW(hwnd, GWL_EXSTYLE, style)
-        # re-assert the new window style    # 下面两句恢复任务栏图标
-        root.withdraw()
-        root.after(0, root.deiconify)
-
-    root_window.after(0, set_appwindow, root_window)
-
-
-# def CBJQ_SS_FrontEnd_tk_Splash_instance_destory(event):
-#     global FrontEnd_Splash_instance
-#     FrontEnd_Splash_instance.root_window.destroy()
+def CBJQ_SS_FrontEnd_tk_Splash_instance_destory(event):
+    global FrontEnd_Splash_instance
+    FrontEnd_Splash_instance.root_window.destroy()
 
 
 class CBJQ_SS_FrontEnd_tk_Splash:
@@ -206,7 +188,7 @@ class CBJQ_SS_FrontEnd_tk_Splash:
 
         self.autoSkipTime = autoSkipTime
 
-        self.root_window = tkinter.Toplevel()
+        self.root_window = tkinter.Tk()
         self.root_window.title(f'{product_name} - {author_name}')
         self.root_window.iconphoto(True, tkinter.PhotoImage(file=getProgramResourcePath('res/icon1.png')))
         # self.root_window.configure(bg='blue')
@@ -262,11 +244,30 @@ class CBJQ_SS_FrontEnd_tk_Splash:
         print(self.root_window.winfo_width(), self.root_window.winfo_height())
         print(self.root_window.winfo_reqwidth(), self.root_window.winfo_reqheight())
 
-    def before_run(self):
+    def run(self):
         if self.broken:
-            return False
+            return
 
-        # self.root_window.after(300, __window_setRedirect)
+        def __window_setRedirect():
+            nonlocal self
+            self.root_window.overrideredirect(True)
+
+            def set_appwindow(root):
+                hwnd = windll.user32.GetParent(root.winfo_id())
+                style = windll.user32.GetWindowLongPtrW(hwnd, GWL_EXSTYLE)
+                print(style)
+                style = style & ~WS_EX_TOOLWINDOW
+                style = style | WS_EX_APPWINDOW
+                print(style)
+                res = windll.user32.SetWindowLongPtrW(hwnd, GWL_EXSTYLE, style)
+                # re-assert the new window style    # 下面两句恢复任务栏图标
+                root.withdraw()
+                root.after(0, root.deiconify)
+
+            self.root_window.after(0, set_appwindow, self.root_window)
+
+        self.root_window.after(300, __window_setRedirect)
+
         relx = lambda x: self.canvas_size[0] * x
         rely = lambda y: self.canvas_size[1] * y
         self.root_window.configure(width=self.canvas_size[0]+1, height=self.canvas_size[1]+1)     # 加一是似乎是tk有bug
@@ -313,9 +314,7 @@ class CBJQ_SS_FrontEnd_tk_Splash:
         print(self.root_window.winfo_vrootx(), self.root_window.winfo_vrooty())
         print(self.root_window.winfo_x(), self.root_window.winfo_y())
         # self.root_window.eval('tk::PlaceWindow . center')
-        return True
 
-    def run_only(self):
         self.root_window.mainloop()
         return self.quitProgram_flag
 
@@ -875,22 +874,13 @@ if __name__ == '__main__':
         print('Executable not found.')
 
     if showSplash:
-        root = tkinter.Tk()
-        FrontEnd_Splash_instance1 = CBJQ_SS_FrontEnd_tk_Splash(imgpathinfolist=splash_ImgPathInfoList,
-                                                               size=splashSize,
-                                                               isRandom=showSplashRandomly,
-                                                               autoSkipTime=showSplash_autoSkipAfter)
-        FrontEnd_Splash_instance2 = CBJQ_SS_FrontEnd_tk_Splash(imgpathinfolist=splash_ImgPathInfoList,
-                                                               size=splashSize,
-                                                               isRandom=showSplashRandomly,
-                                                               autoSkipTime=showSplash_autoSkipAfter)
-        retv1 = FrontEnd_Splash_instance1.before_run()
-        retv2 = FrontEnd_Splash_instance2.before_run()
-        window_setRedirect(FrontEnd_Splash_instance2.root_window)
-        retv = root.mainloop()
+        FrontEnd_Splash_instance = CBJQ_SS_FrontEnd_tk_Splash(imgpathinfolist=splash_ImgPathInfoList,
+                                                              size=splashSize,
+                                                              isRandom=showSplashRandomly,
+                                                              autoSkipTime=showSplash_autoSkipAfter)
+        retv = FrontEnd_Splash_instance.run()
         if retv:
             sys.exit(0)
-        root.destroy()
         # input('end of splash')
 
     if appConfig is not None:
