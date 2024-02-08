@@ -248,6 +248,26 @@ class CBJQ_SS_FrontEnd_tk_Splash:
         if self.broken:
             return
 
+        def __window_setRedirect():
+            nonlocal self
+            self.root_window.overrideredirect(True)
+
+            def set_appwindow(root):
+                hwnd = windll.user32.GetParent(root.winfo_id())
+                style = windll.user32.GetWindowLongPtrW(hwnd, GWL_EXSTYLE)
+                print(style)
+                style = style & ~WS_EX_TOOLWINDOW
+                style = style | WS_EX_APPWINDOW
+                print(style)
+                res = windll.user32.SetWindowLongPtrW(hwnd, GWL_EXSTYLE, style)
+                # re-assert the new window style    # 下面两句恢复任务栏图标
+                root.withdraw()
+                root.after(0, root.deiconify)
+
+            self.root_window.after(0, set_appwindow, self.root_window)
+
+        self.root_window.after(300, __window_setRedirect)
+
         relx = lambda x: self.canvas_size[0] * x
         rely = lambda y: self.canvas_size[1] * y
         self.root_window.configure(width=self.canvas_size[0]+1, height=self.canvas_size[1]+1)     # 加一是似乎是tk有bug
@@ -294,26 +314,6 @@ class CBJQ_SS_FrontEnd_tk_Splash:
         print(self.root_window.winfo_vrootx(), self.root_window.winfo_vrooty())
         print(self.root_window.winfo_x(), self.root_window.winfo_y())
         # self.root_window.eval('tk::PlaceWindow . center')
-
-        def __window_setRedirect():
-            nonlocal self
-            self.root_window.overrideredirect(True)
-
-            def set_appwindow(root):
-                hwnd = windll.user32.GetParent(root.winfo_id())
-                style = windll.user32.GetWindowLongPtrW(hwnd, GWL_EXSTYLE)
-                print(style)
-                style = style & ~WS_EX_TOOLWINDOW
-                style = style | WS_EX_APPWINDOW
-                print(style)
-                res = windll.user32.SetWindowLongPtrW(hwnd, GWL_EXSTYLE, style)
-                # re-assert the new window style    # 下面两句恢复任务栏图标
-                root.withdraw()
-                root.after(10, root.deiconify)
-
-            self.root_window.after(10, set_appwindow, self.root_window)
-
-        self.root_window.after(10, __window_setRedirect)
 
         self.root_window.mainloop()
         return self.quitProgram_flag
