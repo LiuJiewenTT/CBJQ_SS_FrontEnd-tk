@@ -32,31 +32,54 @@ GetWindowLongPtrW = windll.user32.GetWindowLongPtrW
 SetWindowLongPtrW = windll.user32.SetWindowLongPtrW
 
 
+class Logger_Identifer:
+    id: str = 'unknown'
+    newline: bool = False
+
+
 class Logger(object):
-    def __init__(self, filename, mode='a', encoding='UTF-8'):
+    def __init__(self, identifier: Logger_Identifer, filename, mode='a', encoding='UTF-8'):
+        self.identifier = identifier
         self.terminal = sys.stdout
         self.log = open(filename, mode, encoding=encoding)
 
     def write(self, message):
-        self.terminal.write(message)
         message: str
-        message = message.replace('\n', '\n[stdout] ')
-        self.log.write(message)
+        self.terminal.write(message)
+        # message = message.replace('\n', '\n[stdout] ', message.count('\n', 0, -1))
+        message2 = message[:-1].replace('\n', '\n[stdout] ') + (message[-1] if len(message) else '')
+        if self.identifier.id != 'stdout' or self.identifier.newline is True:
+            self.identifier.id = 'stdout'
+            self.log.write('[stdout] ')
+        if message.endswith('\n'):
+            self.identifier.newline = True
+        else:
+            self.identifier.newline = False
+        self.log.write(message2)
 
     def flush(self):
         self.terminal.flush()
         self.log.flush()
 
 
-class Logger_ERR2OUT(object):
-    def __init__(self, out: Logger):
+class Logger_ERR2OUTLOG(object):
+    def __init__(self, identifier: Logger_Identifer, out: Logger):
+        self.identifier = identifier
         self.terminal = sys.stderr
         self.log = out.log
 
     def write(self, message):
-        self.terminal.write(message)
         message: str
-        message = message.replace('\n', '\n[stderr] ')
+        self.terminal.write(message)
+        # message = message.replace('\n', '\n[stderr] ', message.count('\n', 0, -1))
+        message = message[:-1].replace('\n', '\n[stderr] ') + (message[-1] if len(message) else '')
+        if self.identifier.id != 'stderr' or self.identifier.newline is True:
+            self.identifier.id = 'stderr'
+            self.log.write('[stderr] ')
+        if message.endswith('\n'):
+            self.identifier.newline = True
+        else:
+            self.identifier.newline = False
         self.log.write(message)
 
     def flush(self):
@@ -877,8 +900,9 @@ if __name__ == '__main__':
     backend_path = 'CBJQ_SS.main.bat'
     server_list = {'国际服': 'worldwide', 'B服': 'bilibili', '官服': 'kingsoft'}
 
-    sys.stdout = Logger('log.txt', 'w')
-    sys.stderr = Logger_ERR2OUT(sys.stdout)
+    std_identifer = Logger_Identifer()
+    sys.stdout = Logger(std_identifer, 'log.txt', 'w')
+    sys.stderr = Logger_ERR2OUTLOG(std_identifer, sys.stdout)
 
     if osp.exists(config_filename):
         with open(config_filename, 'r', encoding='UTF-8') as f:
