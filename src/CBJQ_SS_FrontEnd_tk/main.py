@@ -45,7 +45,8 @@ class Logger(object):
 
     def write(self, message):
         message: str
-        self.terminal.write(message)
+        if self.terminal:
+            self.terminal.write(message)
         # message = message.replace('\n', '\n[stdout] ', message.count('\n', 0, -1))
         message2 = message[:-1].replace('\n', '\n[stdout] ') + (message[-1] if len(message) else '')
         if self.identifier.id != 'stdout' or self.identifier.newline is True:
@@ -70,7 +71,8 @@ class Logger_ERR2OUTLOG(object):
 
     def write(self, message):
         message: str
-        self.terminal.write(message)
+        if self.terminal:
+            self.terminal.write(message)
         # message = message.replace('\n', '\n[stderr] ', message.count('\n', 0, -1))
         message = message[:-1].replace('\n', '\n[stderr] ') + (message[-1] if len(message) else '')
         if self.identifier.id != 'stderr' or self.identifier.newline is True:
