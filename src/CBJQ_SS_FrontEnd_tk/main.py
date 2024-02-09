@@ -153,21 +153,14 @@ def window_setRedirect(root):
     def set_appwindow(root):
         hwnd = windll.user32.GetParent(root.winfo_id())
         style = windll.user32.GetWindowLongPtrW(hwnd, GWL_EXSTYLE)
-        print(style)
         style = style & ~WS_EX_TOOLWINDOW
         style = style | WS_EX_APPWINDOW
-        print(style)
         res = windll.user32.SetWindowLongPtrW(hwnd, GWL_EXSTYLE, style)
         # re-assert the new window style    # 下面两句恢复任务栏图标
         root.withdraw()
         root.after(0, root.deiconify)
 
     root.after(0, set_appwindow, root)
-
-
-def CBJQ_SS_FrontEnd_tk_Splash_instance_destory(event):
-    global FrontEnd_Splash_instance
-    FrontEnd_Splash_instance.root_window.destroy()
 
 
 class CBJQ_SS_FrontEnd_tk_Splash:
@@ -272,13 +265,11 @@ class CBJQ_SS_FrontEnd_tk_Splash:
                 style &= ~(WS_THICKFRAME)
 
             SetWindowLongPtrW(hwnd, GWL_STYLE, style)
-
-            # self.root_window.wm_sizefrom('program')
-            # print('wm_frame', self.root_window.wm_frame())
-
+        # self.root_window.wm_sizefrom('program')
+        # print('wm_frame', self.root_window.wm_frame())
         # self.root_window.update_idletasks()
-        print(self.root_window.winfo_width(), self.root_window.winfo_height())
-        print(self.root_window.winfo_reqwidth(), self.root_window.winfo_reqheight())
+        # print(self.root_window.winfo_width(), self.root_window.winfo_height())
+        # print(self.root_window.winfo_reqwidth(), self.root_window.winfo_reqheight())
 
     def run(self):
         if self.broken:
@@ -288,15 +279,9 @@ class CBJQ_SS_FrontEnd_tk_Splash:
         rely = lambda y: self.canvas_size[1] * y
         # self.root_window.configure(width=self.canvas_size[0], height=self.canvas_size[1])
         self.root_window.configure(width=self.canvas_size[0] + 1, height=self.canvas_size[1] + 1)  # 加一是似乎是tk有bug
-        print(self.root_window.pack_propagate(False))
-        print(self.root_window.pack_slaves())
         self.root_window.update_idletasks()
-        print(self.splash_canvas.pack_propagate(False))
         self.splash_canvas.pack()
         # self.splash_canvas.pack(padx=0, pady=0, ipadx=0, ipady=0)
-        print(self.splash_canvas.pack_info())
-        print(self.root_window.pack_slaves())
-        print(self.splash_canvas.pack_propagate(False))
         # self.splash_canvas.place()
         # self.root_window.eval('tk::PlaceWindow . center')
         self.splash_canvas.create_image(0, 0, image=self.splash_photoimg, anchor="nw")
@@ -319,12 +304,9 @@ class CBJQ_SS_FrontEnd_tk_Splash:
             self.root_window.after(self.autoSkipTime, lambda: self.destroy())
 
         self.root_window.configure(width=self.canvas_size[0], height=self.canvas_size[1])
-        # self.root_window.update()
-        print(self.root_window.winfo_width(), self.root_window.winfo_height())
-        print(self.splash_canvas.winfo_width(), self.splash_canvas.winfo_height())
-        print(self.root_window.winfo_rootx(), self.root_window.winfo_rooty())
-        print(self.root_window.winfo_vrootx(), self.root_window.winfo_vrooty())
-        print(self.root_window.winfo_x(), self.root_window.winfo_y())
+        self.root_window.update()
+        print('splash window size: ', self.root_window.winfo_width(), self.root_window.winfo_height())
+        print('splash canvas size: ', self.splash_canvas.winfo_width(), self.splash_canvas.winfo_height())
         # self.root_window.eval('tk::PlaceWindow . center')
 
         # 根据splashWindowKind决定后续
@@ -337,7 +319,7 @@ class CBJQ_SS_FrontEnd_tk_Splash:
     def destroy(self, opt=0):
         # print('销毁')
         # self.splash_photoimg.__del__()
-        print(self.root_window.winfo_width(), self.root_window.winfo_height())
+        print('window size when destroy: ', self.root_window.winfo_width(), self.root_window.winfo_height())
         for item in self.splash_canvas.canvas_texts:
             self.splash_canvas.delete(item)
         self.root_window.destroy()
