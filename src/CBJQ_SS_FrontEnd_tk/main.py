@@ -630,8 +630,11 @@ class CBJQ_SS_FrontEnd_tk:
             self.displayLog_text.insertAndScrollToEnd(f'launch_cmd: {launch_cmd}')
             exec_readiness = checkExecutableReadiness(self.backend_path)
             if exec_readiness:
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                startupinfo.wShowWindow = subprocess.SW_HIDE
                 with subprocess.Popen(launch_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                      encoding='utf-8') as sp:
+                                      encoding='utf-8', startupinfo=startupinfo) as sp:
                     self.displayLog_text.insertAndScrollToEnd(f'sp.pid: {sp.pid}')
                     self.displayLog_text.insertAndScrollToEnd(strOverDivider('[+]' + '运行报告', '-', self.divider_length,
                                                                              self.displayLog_text_font))
@@ -902,6 +905,7 @@ if __name__ == '__main__':
     backend_path = 'CBJQ_SS.main.bat'
     server_list = {'国际服': 'worldwide', 'B服': 'bilibili', '官服': 'kingsoft'}
 
+    stdout_raw = sys.stdout
     std_identifer = Logger_Identifer()
     sys.stdout = Logger(std_identifer, 'log.txt', 'w')
     sys.stderr = Logger_ERR2OUTLOG(std_identifer, sys.stdout)
