@@ -631,8 +631,9 @@ class CBJQ_SS_FrontEnd_tk:
             exec_readiness = checkExecutableReadiness(self.backend_path)
             if exec_readiness:
                 startupinfo = subprocess.STARTUPINFO()
-                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-                startupinfo.wShowWindow = subprocess.SW_HIDE
+                if exec_noWindow:
+                    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                    startupinfo.wShowWindow = subprocess.SW_HIDE
                 with subprocess.Popen(launch_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                       encoding='utf-8', startupinfo=startupinfo) as sp:
                     self.displayLog_text.insertAndScrollToEnd(f'sp.pid: {sp.pid}')
@@ -859,7 +860,8 @@ def changeCWD(the_new_cwd: str):
 
 def ApplyGlobalConfig(AppConfig: dict):
     global LOCKCONFIG, backend_path, server_list, cwd, \
-        showSplash, splashWindowKind, showSplash_autoSkipAfter, splashSize, showSplashRandomly, splash_ImgPathInfoList
+        showSplash, splashWindowKind, showSplash_autoSkipAfter, splashSize, showSplashRandomly, splash_ImgPathInfoList,\
+        exec_noWindow
     LOCKCONFIG = returnIfNotNone(AppConfig.get('LOCKCONFIG'), LOCKCONFIG)
     backend_path = returnIfNotNone(AppConfig.get('backend_path'), backend_path)
     server_list = returnIfNotNone(AppConfig.get('server_list'), server_list)
@@ -870,6 +872,7 @@ def ApplyGlobalConfig(AppConfig: dict):
     showSplashRandomly = returnIfNotNone(AppConfig.get('showSplashRandomly'), showSplashRandomly)
     splash_ImgPathInfoList = returnIfNotNone(AppConfig.get('splash_ImgPathInfoList'), splash_ImgPathInfoList)
     changeCWD(returnIfNotNone(AppConfig.get('cwd'), cwd))
+    exec_noWindow = returnIfNotNone(AppConfig.get('exec_noWindow'), exec_noWindow)
     pass
 
 
@@ -886,6 +889,7 @@ def PackGlobalConfig(AppConfig: dict) -> dict:
     retv['showSplashRandomly'] = showSplashRandomly
     retv['splash_ImgPathInfoList'] = splash_ImgPathInfoList
     retv['cwd'] = cwd
+    retv['exec_noWindow'] = exec_noWindow
     return retv
 
 
@@ -904,6 +908,7 @@ if __name__ == '__main__':
     splash_ImgPathInfoList: List[Dict[str, str]] = []
     backend_path = 'CBJQ_SS.main.bat'
     server_list = {'国际服': 'worldwide', 'B服': 'bilibili', '官服': 'kingsoft'}
+    exec_noWindow = True
 
     stdout_raw = sys.stdout
     std_identifer = Logger_Identifer()
