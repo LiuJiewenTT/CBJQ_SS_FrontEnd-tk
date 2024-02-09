@@ -15,8 +15,7 @@ import PIL
 import PIL.ImageTk
 import PIL.Image
 import unicodedata
-import math
-from ctypes import windll, wintypes
+from ctypes import windll
 from CBJQ_SS_FrontEnd_tk.programinfo import *
 
 # Windows Section
@@ -31,6 +30,38 @@ WS_EX_TOOLWINDOW = 0x00000080
 # WS_POPUP = 0x80000000
 GetWindowLongPtrW = windll.user32.GetWindowLongPtrW
 SetWindowLongPtrW = windll.user32.SetWindowLongPtrW
+
+
+class Logger(object):
+    def __init__(self, filename, mode='a', encoding='UTF-8'):
+        self.terminal = sys.stdout
+        self.log = open(filename, mode, encoding=encoding)
+
+    def write(self, message):
+        self.terminal.write(message)
+        message: str
+        message = message.replace('\n', '\n[stdout] ')
+        self.log.write(message)
+
+    def flush(self):
+        self.terminal.flush()
+        self.log.flush()
+
+
+class Logger_ERR2OUT(object):
+    def __init__(self, out: Logger):
+        self.terminal = sys.stderr
+        self.log = out.log
+
+    def write(self, message):
+        self.terminal.write(message)
+        message: str
+        message = message.replace('\n', '\n[stderr] ')
+        self.log.write(message)
+
+    def flush(self):
+        self.terminal.flush()
+        self.log.flush()
 
 
 def get_window_handle(root) -> int:
@@ -845,6 +876,9 @@ if __name__ == '__main__':
     splash_ImgPathInfoList: List[Dict[str, str]] = []
     backend_path = 'CBJQ_SS.main.bat'
     server_list = {'国际服': 'worldwide', 'B服': 'bilibili', '官服': 'kingsoft'}
+
+    sys.stdout = Logger('log.txt', 'w')
+    sys.stderr = Logger_ERR2OUT(sys.stdout)
 
     if osp.exists(config_filename):
         with open(config_filename, 'r', encoding='UTF-8') as f:
