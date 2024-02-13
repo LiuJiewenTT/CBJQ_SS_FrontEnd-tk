@@ -269,6 +269,7 @@ class CBJQ_SS_FrontEnd_tk_Splash:
         self.root_window.title(f'{product_name} - {author_name}')
         self.root_window.iconphoto(True, tkinter.PhotoImage(file=getProgramResourcePath('res/icon1.png')))
         # self.root_window.configure(bg='blue')
+        self.root_window.scheduleRecords = []
 
         self.splash_img = PIL.Image.open(imgpath)
         self.splash_photoimg = PIL.ImageTk.PhotoImage(resizeImgIntoFrame(self.splash_img, size))
@@ -368,7 +369,8 @@ class CBJQ_SS_FrontEnd_tk_Splash:
                                                             image=self.splash_close_photoimg, anchor="ne")
         self.splash_canvas.tag_bind(self.close_button, "<Button-1>", lambda event: self.destroy(opt=1))
         if self.autoSkipTime > 250:
-            self.root_window.after(self.autoSkipTime, lambda: self.destroy())
+            scheduleId = self.root_window.after(self.autoSkipTime, lambda: self.destroy())
+            self.root_window.scheduleRecords.append(scheduleId)
 
         self.root_window.configure(width=self.canvas_size[0], height=self.canvas_size[1])
         self.root_window.update()
@@ -378,8 +380,10 @@ class CBJQ_SS_FrontEnd_tk_Splash:
 
         # 根据splashWindowKind决定后续
         if self.splashWindowKind == 'true-borderless':
-            self.root_window.after(300, window_setRedirect, self.root_window)
-            self.root_window.after(1000, lambda: self.root_window.wm_attributes('-topmost', False))
+            scheduleId = self.root_window.after(300, window_setRedirect, self.root_window)
+            self.root_window.scheduleRecords.append(scheduleId)
+            scheduleId = self.root_window.after(1000, lambda: self.root_window.wm_attributes('-topmost', False))
+            self.root_window.scheduleRecords.append(scheduleId)
 
         self.root_window.mainloop()
         return self.quitProgram_flag
@@ -390,6 +394,13 @@ class CBJQ_SS_FrontEnd_tk_Splash:
         print('window size when destroy: ', self.root_window.winfo_width(), self.root_window.winfo_height())
         for item in self.splash_canvas.canvas_texts:
             self.splash_canvas.delete(item)
+        if self.root_window.scheduleRecords:
+            scheduleRecords = self.root_window.scheduleRecords.copy()
+            # print(scheduleRecords)
+            for item in scheduleRecords:
+                # print(item)
+                self.root_window.after_cancel(item)
+                self.root_window.scheduleRecords.remove(item)
         self.root_window.destroy()
         if opt:
             self.quitProgram_flag = opt
