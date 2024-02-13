@@ -72,6 +72,9 @@
     }
   ],
   "cwd": ".",								# 运行时的工作目录。
+  "exec_noWindow": true,					# 运行后端时保持无窗口状态
+  "printConfigOnWrite": false,				# 写入配置时是否打印内容
+  "log_KeepFlushing": true,					# 是否实时刷新写入日志的内容。
   "server_curselection": [					# 当前选择的，在服务器列表中供选择的服务器选项
     "B服"									# 使用“显示名称”而非“对应参数值”。
   ],
@@ -82,10 +85,7 @@
     200										# 高度。单位：像素
   ],
   "resultBonus_pics_success_list": null,	# 运行后报告显示的在程序运行正常时的表情包。同上splash_ImgPathInfoList的格式。
-  "resultBonus_pics_fail_list": null,		# 运行后报告显示的在程序运行出错时的表情包。同上splash_ImgPathInfoList的格式。
-  "exec_noWindow": true,					# 运行后端时保持无窗口状态
-  "printConfigOnWrite": false,				# 写入配置时是否打印内容
-  "log_KeepFlushing": true					# 是否实时刷新写入日志的内容。
+  "resultBonus_pics_fail_list": null		# 运行后报告显示的在程序运行出错时的表情包。同上splash_ImgPathInfoList的格式。
 }
 ```
 

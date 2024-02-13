@@ -950,7 +950,8 @@ if __name__ == '__main__':
     if osp.exists(config_filename):
         with open(config_filename, 'r', encoding='UTF-8') as f:
             config_content = f.read()
-            appConfig: dict = orjson.loads(config_content)
+            if config_content:
+                appConfig: dict = orjson.loads(config_content)
         if appConfig is not None:
             ApplyGlobalConfig(appConfig)
 
