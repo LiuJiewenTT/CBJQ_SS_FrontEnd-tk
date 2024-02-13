@@ -17,6 +17,8 @@ import PIL.Image
 import unicodedata
 from ctypes import windll
 from CBJQ_SS_FrontEnd_tk.programinfo import *
+if getattr(sys, 'frozen', False):
+    import pyi_splash
 
 # Windows Section
 GWL_STYLE = -16
@@ -59,7 +61,8 @@ class Logger(object):
         self.log.write(message2)
 
     def flush(self):
-        self.terminal.flush()
+        if self.terminal:
+            self.terminal.flush()
         self.log.flush()
 
 
@@ -85,7 +88,8 @@ class Logger_ERR2OUTLOG(object):
         self.log.write(message)
 
     def flush(self):
-        self.terminal.flush()
+        if self.terminal:
+            self.terminal.flush()
         self.log.flush()
 
 
@@ -944,6 +948,9 @@ if __name__ == '__main__':
     if arg_cwd != '':
         changeCWD(arg_cwd)
     appConfig = PackGlobalConfig(returnIfNotNone(appConfig, {}))
+
+    if getattr(sys, 'frozen', False):
+        pyi_splash.close()
 
     exec_readiness = checkExecutableReadiness('CBJQ_SS.main.bat')
     if exec_readiness is False:
