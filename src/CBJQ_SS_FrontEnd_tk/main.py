@@ -885,7 +885,7 @@ def changeCWD(the_new_cwd: str):
 def ApplyGlobalConfig(AppConfig: dict):
     global LOCKCONFIG, backend_path, server_list, cwd, \
         showSplash, splashWindowKind, showSplash_autoSkipAfter, splashSize, showSplashRandomly, splash_ImgPathInfoList,\
-        exec_noWindow, printConfigOnWrite, log_KeepFlushing
+        exec_noWindow, printConfigOnWrite, log_keepFlushing
     LOCKCONFIG = returnIfNotNone(AppConfig.get('LOCKCONFIG'), LOCKCONFIG)
     backend_path = returnIfNotNone(AppConfig.get('backend_path'), backend_path)
     server_list = returnIfNotNone(AppConfig.get('server_list'), server_list)
@@ -898,9 +898,9 @@ def ApplyGlobalConfig(AppConfig: dict):
     changeCWD(returnIfNotNone(AppConfig.get('cwd'), cwd))
     exec_noWindow = returnIfNotNone(AppConfig.get('exec_noWindow'), exec_noWindow)
     printConfigOnWrite = returnIfNotNone(AppConfig.get('printConfigOnWrite'), printConfigOnWrite)
-    log_KeepFlushing = returnIfNotNone(AppConfig.get('log_KeepFlushing'), log_KeepFlushing)
-    sys.stdout.log_KeepFlushing = log_KeepFlushing
-    sys.stderr.log_KeepFlushing = log_KeepFlushing
+    log_keepFlushing = returnIfNotNone(AppConfig.get('log_keepFlushing'), log_keepFlushing)
+    sys.stdout.log_KeepFlushing = log_keepFlushing
+    sys.stderr.log_KeepFlushing = log_keepFlushing
     pass
 
 
@@ -919,7 +919,7 @@ def PackGlobalConfig(AppConfig: dict) -> dict:
     retv['cwd'] = cwd
     retv['exec_noWindow'] = exec_noWindow
     retv['printConfigOnWrite'] = printConfigOnWrite
-    retv['log_KeepFlushing'] = log_KeepFlushing
+    retv['log_keepFlushing'] = log_keepFlushing
     return retv
 
 
@@ -940,7 +940,7 @@ if __name__ == '__main__':
     server_list = {'国际服': 'worldwide', 'B服': 'bilibili', '官服': 'kingsoft'}
     exec_noWindow = True
     printConfigOnWrite = False
-    log_KeepFlushing = True
+    log_keepFlushing = True
 
     stdout_raw = sys.stdout
     std_identifer = Logger_Identifer()
