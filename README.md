@@ -4,7 +4,7 @@
 
 当前版本已支持配置文件。
 
-![icon_png](res/icon1.png)
+<img src="res/icon1.png" style="width:128px; height: 128px"><img src="res/里芙带来了她的两个包子-透明背景.png" style="width:128px; height: 128px"><img src="res/里芙和她的两个包子.png" style="width:128px; height: 128px"> 香香滴包子，里芙我们一起吃！
 
 ## 构建
 
@@ -34,6 +34,15 @@
 2. 生成的配置文件会在每次程序正常退出时自动更新重写，但内部信息不会随意变动，持续保持原有数据，除非受到**启动参数的影响**（如`-cwd`）。
 3. **运行后报告**需要后端版本不低于`v1.0.1`。
 
+资源说明：
+
+1. 本程序所有资源，若有侵权，请联系本人，本人将立即删除。本人无意侵害他人的权利，不会有意使用明确标注了版权的资源。
+2. 为提升程序启动速度、减小程序体积和轻便升级程序版本，正式发行的版本默认不会嵌入大量资源文件。所有使用的非嵌入资源文件，通常可以从互联网轻松获得，本人不承诺一定会有自发布自用资源包。
+
+代码说明：
+
+1. 当前的代码混入了大量调试时随手写的内容，后期会一并优化。
+
 ### 配置文件说明
 
 >  注：不同程序版本可能使用的配置文件不完全相同，若有出入，请依照此节说明进行更新。（不保证未来会有配置更新迁移功能。）
@@ -42,6 +51,7 @@
 
 ``` json
 {
+  "LOCKCONFIG": false,						#设置程序结束是否可以更新此配置文件。取值：true/false
   "backend_path": "CBJQ_SS.main.bat",		# 设置后端程序CBJQ_SS.main.bat的文件路径。若为相对路径则受cwd影响。
   "server_list": {							# 设置显示的服务器列表和对应的用于传递给后端程序使其指定服务器的值
     "国际服": "worldwide",					# 格式："显示名称": "对应参数值"。显示名称必须唯一，不可重复。
@@ -49,6 +59,7 @@
     "官服": "kingsoft"
   },
   "showSplash": true,						# 显示启动页。true表示显示，false表示不显示。
+  "splashWindowKind": "true-borderless",	# 设置启动页边框风格。
   "showSplash_autoSkipAfter": 0,			# 设置启动页自动跳过计时时长，低于（或等于）250ms不生效。
   "splashSize": [							# 设置启动页在启动时的最大尺寸。启动页会自动适配启动图尺寸。
     640,									# 宽度。单位：像素
@@ -72,7 +83,10 @@
     200										# 高度。单位：像素
   ],
   "resultBonus_pics_success_list": null,	# 运行后报告显示的在程序运行正常时的表情包。同上splash_ImgPathInfoList的格式。
-  "resultBonus_pics_fail_list": null		# 运行后报告显示的在程序运行出错时的表情包。同上splash_ImgPathInfoList的格式。
+  "resultBonus_pics_fail_list": null,		# 运行后报告显示的在程序运行出错时的表情包。同上splash_ImgPathInfoList的格式。
+  "exec_noWindow": true,					# 运行后端时保持无窗口状态
+  "printConfigOnWrite": false,				# 写入配置时是否打印内容
+  "log_KeepFlushing": true					# 是否实时刷新写入日志的内容。
 }
 ```
 
