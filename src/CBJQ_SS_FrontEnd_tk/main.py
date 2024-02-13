@@ -214,9 +214,9 @@ def window_setRedirect(root):
         res = windll.user32.SetWindowLongPtrW(hwnd, GWL_EXSTYLE, style)
         # re-assert the new window style    # 下面两句恢复任务栏图标
         root.withdraw()
-        root.after(0, root.deiconify)
+        root.after(10, root.deiconify)
 
-    root.after(0, set_appwindow, root)
+    root.after(10, set_appwindow, root)
 
 
 class CBJQ_SS_FrontEnd_tk_Splash:
@@ -299,6 +299,7 @@ class CBJQ_SS_FrontEnd_tk_Splash:
         # 根据splashWindowKind决定后续
         if self.splashWindowKind == 'true-borderless':
             # self.root_window.overrideredirect(1)
+            self.root_window.wm_attributes('-topmost', True)
             pass
         elif self.splashWindowKind == 'normal':
             pass
@@ -368,6 +369,7 @@ class CBJQ_SS_FrontEnd_tk_Splash:
         # 根据splashWindowKind决定后续
         if self.splashWindowKind == 'true-borderless':
             self.root_window.after(300, window_setRedirect, self.root_window)
+            self.root_window.after(1000, lambda: self.root_window.wm_attributes('-topmost', False))
 
         self.root_window.mainloop()
         return self.quitProgram_flag
@@ -834,7 +836,8 @@ class CBJQ_SS_FrontEnd_tk:
             filepath = self.config_savepath
         print(f'Write config to: {filepath}')
         with open(filepath, 'w', encoding='UTF-8') as f:
-            print(content.decode(encoding='UTF-8'))
+            if printLogOnWrite:
+                print(content.decode(encoding='UTF-8'))
             f.write(content.decode(encoding='UTF-8'))
         print(f'Write success.')
 
@@ -861,7 +864,7 @@ def changeCWD(the_new_cwd: str):
 def ApplyGlobalConfig(AppConfig: dict):
     global LOCKCONFIG, backend_path, server_list, cwd, \
         showSplash, splashWindowKind, showSplash_autoSkipAfter, splashSize, showSplashRandomly, splash_ImgPathInfoList,\
-        exec_noWindow
+        exec_noWindow, printLogOnWrite
     LOCKCONFIG = returnIfNotNone(AppConfig.get('LOCKCONFIG'), LOCKCONFIG)
     backend_path = returnIfNotNone(AppConfig.get('backend_path'), backend_path)
     server_list = returnIfNotNone(AppConfig.get('server_list'), server_list)
@@ -873,6 +876,7 @@ def ApplyGlobalConfig(AppConfig: dict):
     splash_ImgPathInfoList = returnIfNotNone(AppConfig.get('splash_ImgPathInfoList'), splash_ImgPathInfoList)
     changeCWD(returnIfNotNone(AppConfig.get('cwd'), cwd))
     exec_noWindow = returnIfNotNone(AppConfig.get('exec_noWindow'), exec_noWindow)
+    printLogOnWrite = returnIfNotNone(AppConfig.get('printLogOnWrite'), printLogOnWrite)
     pass
 
 
@@ -890,6 +894,7 @@ def PackGlobalConfig(AppConfig: dict) -> dict:
     retv['splash_ImgPathInfoList'] = splash_ImgPathInfoList
     retv['cwd'] = cwd
     retv['exec_noWindow'] = exec_noWindow
+    retv['printLogOnWrite'] = printLogOnWrite
     return retv
 
 
@@ -909,6 +914,7 @@ if __name__ == '__main__':
     backend_path = 'CBJQ_SS.main.bat'
     server_list = {'国际服': 'worldwide', 'B服': 'bilibili', '官服': 'kingsoft'}
     exec_noWindow = True
+    printLogOnWrite = False
 
     stdout_raw = sys.stdout
     std_identifer = Logger_Identifer()
