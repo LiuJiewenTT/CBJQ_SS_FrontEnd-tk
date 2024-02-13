@@ -44,13 +44,14 @@ class Logger(object):
         self.identifier = identifier
         self.terminal = sys.stdout
         self.log = open(filename, mode, encoding=encoding)
+        self.log_KeepFlushing = True
 
     def write(self, message):
         message: str
         if self.terminal:
             self.terminal.write(message)
         # message = message.replace('\n', '\n[stdout] ', message.count('\n', 0, -1))
-        message2 = message[:-1].replace('\n', '\n[stdout] ') + (message[-1] if len(message) else '')
+        message = message[:-1].replace('\n', '\n[stdout] ') + (message[-1] if len(message) else '')
         if self.identifier.id != 'stdout' or self.identifier.newline is True:
             self.identifier.id = 'stdout'
             self.log.write('[stdout] ')
@@ -58,7 +59,9 @@ class Logger(object):
             self.identifier.newline = True
         else:
             self.identifier.newline = False
-        self.log.write(message2)
+        self.log.write(message)
+        if self.log_KeepFlushing is True:
+            self.flush()
 
     def flush(self):
         if self.terminal:
@@ -71,6 +74,7 @@ class Logger_ERR2OUTLOG(object):
         self.identifier = identifier
         self.terminal = sys.stderr
         self.log = out.log
+        self.log_KeepFlushing = True
 
     def write(self, message):
         message: str
@@ -86,6 +90,8 @@ class Logger_ERR2OUTLOG(object):
         else:
             self.identifier.newline = False
         self.log.write(message)
+        if self.log_KeepFlushing is True:
+            self.flush()
 
     def flush(self):
         if self.terminal:
@@ -868,7 +874,7 @@ def changeCWD(the_new_cwd: str):
 def ApplyGlobalConfig(AppConfig: dict):
     global LOCKCONFIG, backend_path, server_list, cwd, \
         showSplash, splashWindowKind, showSplash_autoSkipAfter, splashSize, showSplashRandomly, splash_ImgPathInfoList,\
-        exec_noWindow, printLogOnWrite
+        exec_noWindow, printLogOnWrite, log_KeepFlushing
     LOCKCONFIG = returnIfNotNone(AppConfig.get('LOCKCONFIG'), LOCKCONFIG)
     backend_path = returnIfNotNone(AppConfig.get('backend_path'), backend_path)
     server_list = returnIfNotNone(AppConfig.get('server_list'), server_list)
@@ -881,6 +887,9 @@ def ApplyGlobalConfig(AppConfig: dict):
     changeCWD(returnIfNotNone(AppConfig.get('cwd'), cwd))
     exec_noWindow = returnIfNotNone(AppConfig.get('exec_noWindow'), exec_noWindow)
     printLogOnWrite = returnIfNotNone(AppConfig.get('printLogOnWrite'), printLogOnWrite)
+    log_KeepFlushing = returnIfNotNone(AppConfig.get('log_KeepFlushing'), log_KeepFlushing)
+    sys.stdout.log_KeepFlushing = log_KeepFlushing
+    sys.stderr.log_KeepFlushing = log_KeepFlushing
     pass
 
 
@@ -899,6 +908,7 @@ def PackGlobalConfig(AppConfig: dict) -> dict:
     retv['cwd'] = cwd
     retv['exec_noWindow'] = exec_noWindow
     retv['printLogOnWrite'] = printLogOnWrite
+    retv['log_KeepFlushing'] = log_KeepFlushing
     return retv
 
 
@@ -919,6 +929,7 @@ if __name__ == '__main__':
     server_list = {'国际服': 'worldwide', 'B服': 'bilibili', '官服': 'kingsoft'}
     exec_noWindow = True
     printLogOnWrite = False
+    log_KeepFlushing = True
 
     stdout_raw = sys.stdout
     std_identifer = Logger_Identifer()
