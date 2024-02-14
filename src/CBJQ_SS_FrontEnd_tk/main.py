@@ -557,7 +557,7 @@ class CBJQ_SS_FrontEnd_tk:
         # Define statusbar
         # self.statusbar_label_Var = tkinter.StringVar(value=f'作者: {author_name} <{author_email}>。')
         self.statusbar_label_Var = tkinter.StringVar(
-            value=f'作者: {author_name} <{author_email}> 版本: {program_version_str}')
+            value=f'作者: {author_name} <{author_email}> 版本: {product_version_str}')
         self.statusbar_label = ttk.Label(self.root_window, textvariable=self.statusbar_label_Var, anchor=tkinter.W)
 
         # instance methods

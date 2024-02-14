@@ -5,7 +5,8 @@ project_name = 'CBJQ_SS_FrontEnd-tk'
 project_link = 'https://github.com/LiuJiewenTT/CBJQ_SS_FrontEnd-tk'
 product_name = '尘白禁区切服器'
 program_name = 'CBJQ_SS_FrontEnd-tk'
-program_version = (1, 1, 0, 0)
+product_version = (1, 1, 0, 0)
+program_version = (1, 1, 0, 4)
 program_version_str: str
 program_iconpicture_paths = [
     'res/icon1.png',
@@ -17,15 +18,23 @@ program_iconpicture_path: str
 frontend_name = '尘白禁区服务器切换器 - 前端'
 license_type = 'MIT License'
 
+
 # 以下自动生成
 author_info = {
     'author_name': author_name,
     'author_email': author_email
 }
-program_version_str = 'v'
-for i in program_version:
-    if i:
-        program_version_str += f'{i}.'
-program_version_str = program_version_str[:-1]
+
+
+def ver2str(version_tuple: tuple):
+    version_str = 'v'
+    for i in version_tuple:
+        version_str += f'{i}.'
+    version_str = version_str[:-1].rstrip('.0')
+    return version_str
+
+
+product_version_str = ver2str(product_version)
+program_version_str = ver2str(program_version)
 program_iconpicture_path = program_iconpicture_paths[program_iconpicture_idx]
 
