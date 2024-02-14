@@ -267,7 +267,7 @@ class CBJQ_SS_FrontEnd_tk_Splash:
 
         self.root_window = tkinter.Tk()
         self.root_window.title(f'{product_name} - {author_name}')
-        self.root_window.iconphoto(True, tkinter.PhotoImage(file=getProgramResourcePath('res/icon1.png')))
+        self.root_window.iconphoto(True, tkinter.PhotoImage(file=getProgramResourcePath(program_iconpicture_path)))
         # self.root_window.configure(bg='blue')
         self.root_window.scheduleRecords = []
 
@@ -444,7 +444,7 @@ class CBJQ_SS_FrontEnd_tk:
         self.root_window.title(frontend_name)
 
         # print(getProgramResourcePath('res/icon1.png'))
-        self.root_window.iconphoto(True, tkinter.PhotoImage(file=getProgramResourcePath('res/icon1.png')))  # 使用核心目录
+        self.root_window.iconphoto(True, tkinter.PhotoImage(file=getProgramResourcePath(program_iconpicture_path)))  # 使用核心目录
         # self.root_window.iconphoto(True, tkinter.PhotoImage(file=frontend_programdir + '/../../res/icon1.png'))
         # Dev: define img
         # self.img1 = PIL.ImageTk.PhotoImage(PIL.Image.open(getProgramResourcePath('res/让芙提雅老师看看谁在.jpg')))
@@ -569,7 +569,13 @@ class CBJQ_SS_FrontEnd_tk:
         self.aboutWindow = tkinter.Toplevel(self.root_window)
         self.aboutWindow.withdraw()
         self.aboutWindow.title('关于')
+        self.aboutWindow.configure(padx=10, pady=10)
 
+        # Define aboutWindow_programIconImgLabel
+        self.aboutWindow_programIconImgLabel_ImgVar = PIL.ImageTk.PhotoImage(
+            resizeImgIntoFrame(PIL.Image.open(getProgramResourcePath(program_iconpicture_path)), framesize=(256, 256)))
+        self.aboutWindow_programIconImgLabel = ttk.Label(self.aboutWindow,
+                                                         image=self.aboutWindow_programIconImgLabel_ImgVar)
         # Define aboutWindow_contentLabel
         self.aboutWindow_contentLabel_Var = tkinter.StringVar(value=programinfo_str1)
         self.aboutWindow_contentLabel = ttk.Label(self.aboutWindow, textvariable=self.aboutWindow_contentLabel_Var,
@@ -625,7 +631,8 @@ class CBJQ_SS_FrontEnd_tk:
         self.aboutWindow.deiconify()
         self.aboutWindow.rowconfigure((0, ), weight=1)
         self.aboutWindow.columnconfigure((0, ), weight=1)
-        self.aboutWindow_contentLabel.grid(column=0, row=0)
+        self.aboutWindow_programIconImgLabel.grid(column=0, row=0)
+        self.aboutWindow_contentLabel.grid(column=0, row=1)
 
     def toggleLogDisplay(self):
         if self.displayLog_frame_state:
