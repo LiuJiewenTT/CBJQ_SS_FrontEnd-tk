@@ -428,10 +428,18 @@ class CBJQ_SS_FrontEnd_tk:
         if self.server_list is None:
             self.server_list = {}
 
-        displayLog_ifWrapChar = True
-        displayLog_text_ifUseFixedFont = False
-        self.displayLog_frame_state = False
+        # Define Section
+        # 命名规则：实例名称+类名
+        self.text_fixed_font: tkinter.font.Font
+        self.text_unfixed_font: tkinter.font.Font
 
+        # Define rootWindow
+        self.__init_rootWindow__()
+
+        # Define aboutWindow
+        # self.__init_aboutWindow__()
+
+    def __init_rootWindow__(self):
         self.root_window = tkinter.Tk()
         self.root_window.title(frontend_name)
 
@@ -446,12 +454,16 @@ class CBJQ_SS_FrontEnd_tk:
         # self.background_label_1.place(x=0, y=0, relwidth=1, relheight=1)
         self.root_window.protocol("WM_DELETE_WINDOW", func=self.onDeleteMainWindow)
 
-        # Define Fonts
-        self.text_fixed_font = tkinter.font.nametofont('TkFixedFont')
-        self.text_unfixed_font = tkinter.font.nametofont('TkTextFont')
+        displayLog_ifWrapChar = True
+        displayLog_text_ifUseFixedFont = False
+        self.displayLog_frame_state = False
 
         # Define Section
         # 命名规则：实例名称+类名
+
+        # Define Fonts
+        self.text_fixed_font = tkinter.font.nametofont('TkFixedFont')
+        self.text_unfixed_font = tkinter.font.nametofont('TkTextFont')
 
         # Define main_frame_style
         self.main_frame_style = ttk.Style()
@@ -487,6 +499,14 @@ class CBJQ_SS_FrontEnd_tk:
         self.toggleLogDisplay_button_Var = tkinter.StringVar(value='日志 >')
         self.toggleLogDisplay_button = ttk.Button(self.doAction_frame, textvariable=self.toggleLogDisplay_button_Var,
                                                   command=self.toggleLogDisplay)
+        # Define nonAction_frame1
+        self.nonAction_frame1 = ttk.Frame(self.main_frame)
+        # Define aboutWindow_showButton
+        self.aboutWindow_showButton_ImgVar = PIL.ImageTk.PhotoImage(
+            resizeImgIntoFrame(
+                PIL.Image.open(getProgramResourcePath('res/通用资源/info-1459077_640.png')), framesize=(50, 50)))
+        self.aboutWindow_showButton = ttk.Button(self.nonAction_frame1, image=self.aboutWindow_showButton_ImgVar,
+                                                 command=self.run_aboutWindow)
         # Define displayLog_frame
         self.displayLog_frame = ttk.Frame(self.main_frame, padding=(5, 5))
         # Define displayLog_titlebar_frame
@@ -545,14 +565,27 @@ class CBJQ_SS_FrontEnd_tk:
         self.doAction_frame.getPaddingTuple_Regular = partial(getPaddingTuple_Regular, self.doAction_frame)
         self.displayLog_text.insertAndScrollToEnd = partial(insertAndScrollToEnd, self.displayLog_text)
 
+    def __init_aboutWindow__(self):
+        self.aboutWindow = tkinter.Toplevel(self.root_window)
+        self.aboutWindow.withdraw()
+        self.aboutWindow.title('关于')
+
+        # Define aboutWindow_contentLabel
+        self.aboutWindow_contentLabel_Var = tkinter.StringVar(value=programinfo_str1)
+        self.aboutWindow_contentLabel = ttk.Label(self.aboutWindow, textvariable=self.aboutWindow_contentLabel_Var,
+                                                  padding=(10, 10))
+
     def run(self):
+        self.run_rootWindow()
+
+    def run_rootWindow(self):
         # Geometry Management
         self.root_window.rowconfigure(0, weight=1)
         self.root_window.columnconfigure(0, weight=1)
         self.main_frame.grid(sticky=tkinter_NWES)
         self.main_frame.columnconfigure((0, 2), weight=1)
-        self.main_frame.rowconfigure(0, weight=1)
-        self.listServer_frame.grid(column=0, row=0, sticky=tkinter_NWES)
+        self.main_frame.rowconfigure((1,), weight=1)
+        self.listServer_frame.grid(column=0, row=0, rowspan=2, sticky=tkinter_NWES)
         self.listServer_frame.columnconfigure(0, weight=1)
         self.listServer_frame.rowconfigure(1, weight=1)
         self.listServer_label.grid(column=0, row=0, sticky=(tkinter.W, tkinter.S))
@@ -562,6 +595,8 @@ class CBJQ_SS_FrontEnd_tk:
         self.doSwitchAndRun_button.grid(column=0, row=1)
         self.doRun_button.grid(column=0, row=2)
         self.toggleLogDisplay_button.grid(column=0, row=3, sticky=tkinter.S)
+        self.nonAction_frame1.grid(column=1, row=1, sticky=tkinter.S)
+        self.aboutWindow_showButton.grid(column=0, row=0)
         self.displayLog_frame.columnconfigure(0, weight=1)
         self.displayLog_frame.rowconfigure(1, weight=1)
         self.displayLog_titlebar_frame.grid(column=0, row=0, columnspan=2, sticky=tkinter_NWES)
@@ -584,6 +619,14 @@ class CBJQ_SS_FrontEnd_tk:
         self.root_window.mainloop()
         return
 
+    def run_aboutWindow(self):
+        # Define aboutWindow
+        self.__init_aboutWindow__()     # Define window when called.
+        self.aboutWindow.deiconify()
+        self.aboutWindow.rowconfigure((0, ), weight=1)
+        self.aboutWindow.columnconfigure((0, ), weight=1)
+        self.aboutWindow_contentLabel.grid(column=0, row=0)
+
     def toggleLogDisplay(self):
         if self.displayLog_frame_state:
             self.displayLog_frame_state = False
@@ -591,7 +634,7 @@ class CBJQ_SS_FrontEnd_tk:
             self.toggleLogDisplay_button_Var.set('日志 >')
         else:
             self.displayLog_frame_state = True
-            self.displayLog_frame.grid(column=2, row=0, rowspan=1, sticky=tkinter_NWES)
+            self.displayLog_frame.grid(column=2, row=0, rowspan=2, sticky=tkinter_NWES)
             self.toggleLogDisplay_button_Var.set('日志 <')
         return
 
@@ -946,6 +989,16 @@ if __name__ == '__main__':
     std_identifer = Logger_Identifer()
     sys.stdout = Logger(std_identifer, 'log.txt', 'w')
     sys.stderr = Logger_ERR2OUTLOG(std_identifer, sys.stdout)
+
+    programinfo_str1 = (f'Product Name: {product_name}\n'
+                        f'FrontEnd Name: {frontend_name}\n'
+                        f'Author: {author_name} <{author_email}>\n'
+                        f'Program Version: {program_version_str}\n'
+                        f'Project Name: {project_name}\n'
+                        f'Project Link: {project_link}\n'
+                        f'License Type: {license_type}\n')
+
+    print(programinfo_str1)
 
     if osp.exists(config_filename):
         with open(config_filename, 'r', encoding='UTF-8') as f:

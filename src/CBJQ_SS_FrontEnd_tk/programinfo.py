@@ -6,6 +6,7 @@ product_name = '尘白禁区切服器'
 program_name = 'CBJQ_SS_FrontEnd-tk'
 program_version = (1, 1, 0, 0)
 frontend_name = '尘白禁区服务器切换器 - 前端'
+license_type = 'MIT License'
 
 # 以下自动生成
 author_info = {
