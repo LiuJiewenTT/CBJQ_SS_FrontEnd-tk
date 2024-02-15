@@ -577,7 +577,8 @@ class CBJQ_SS_FrontEnd_tk:
         self.aboutWindow_programIconImgLabel = ttk.Label(self.aboutWindow,
                                                          image=self.aboutWindow_programIconImgLabel_ImgVar)
         # Define aboutWindow_contentLabel
-        self.aboutWindow_contentLabel_Var = tkinter.StringVar(value=programinfo_str1)
+        self.aboutWindow_contentLabel_Var = tkinter.StringVar(
+            value=programinfo_str1 + builtin_exinfo.summary_str_singleline())
         self.aboutWindow_contentLabel = ttk.Label(self.aboutWindow, textvariable=self.aboutWindow_contentLabel_Var,
                                                   padding=(10, 10))
 

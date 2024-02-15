@@ -1,3 +1,5 @@
+import sys
+
 author_name = 'LiuJiewenTT'
 author_email = 'liuljwtt@163.com'
 author_info: dict
@@ -17,6 +19,7 @@ program_iconpicture_idx = 1
 program_iconpicture_path: str
 frontend_name = '尘白禁区服务器切换器 - 前端'
 license_type = 'MIT License'
+buildin_exinfo: object
 
 
 # 以下自动生成
@@ -38,3 +41,9 @@ product_version_str = ver2str(product_version)
 program_version_str = ver2str(program_version)
 program_iconpicture_path = program_iconpicture_paths[program_iconpicture_idx]
 
+if getattr(sys, 'frozen', False):
+    # from ...keep_local.build import builtin_exinfo
+    from .builtin_exinfo import Builtin_ExInfo
+else:
+    from .builtin_exinfo_default import Builtin_ExInfo
+builtin_exinfo = Builtin_ExInfo()
