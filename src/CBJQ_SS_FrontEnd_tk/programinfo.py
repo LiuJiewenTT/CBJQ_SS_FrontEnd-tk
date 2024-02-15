@@ -28,6 +28,22 @@ author_info = {
     'author_email': author_email
 }
 
+if getattr(sys, 'frozen', False):
+    # from ...keep_local.build import builtin_exinfo
+    from .builtin_exinfo import Builtin_ExInfo
+else:
+    from .builtin_exinfo_default import Builtin_ExInfo
+builtin_exinfo = Builtin_ExInfo()
+
+
+def override_programinfo_vars(self):
+    global program_iconpicture_idx
+    if self.program_iconpicture_idx is not None:
+        program_iconpicture_idx = self.program_iconpicture_idx
+
+
+override_programinfo_vars(builtin_exinfo)
+
 
 def ver2str(version_tuple: tuple):
     version_str = 'v'
@@ -40,10 +56,3 @@ def ver2str(version_tuple: tuple):
 product_version_str = ver2str(product_version)
 program_version_str = ver2str(program_version)
 program_iconpicture_path = program_iconpicture_paths[program_iconpicture_idx]
-
-if getattr(sys, 'frozen', False):
-    # from ...keep_local.build import builtin_exinfo
-    from .builtin_exinfo import Builtin_ExInfo
-else:
-    from .builtin_exinfo_default import Builtin_ExInfo
-builtin_exinfo = Builtin_ExInfo()
