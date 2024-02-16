@@ -9,3 +9,4 @@ res/启动页资源/预设启动图/截图/*
 temp/
 src/CBJQ_SS_FrontEnd_tk/log.txt
 src/CBJQ_SS_FrontEnd_tk/builtin_exinfo.py
+src/CBJQ_SS_FrontEnd_tk/builtin_exinfo-*.py
