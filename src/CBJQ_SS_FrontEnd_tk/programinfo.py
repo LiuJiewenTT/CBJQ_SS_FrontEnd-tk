@@ -1,5 +1,7 @@
 import sys
+import os.path as osp
 
+build_flag: bool
 author_name = 'LiuJiewenTT'
 author_email = 'liuljwtt@163.com'
 author_info: dict
@@ -28,7 +30,12 @@ author_info = {
     'author_email': author_email
 }
 
-if getattr(sys, 'frozen', False):
+if not osp.exists(__file__) and getattr(sys, 'frozen', False):
+    build_flag = True
+else:
+    build_flag = False
+
+if build_flag is True:
     # from ...keep_local.build import builtin_exinfo
     from .builtin_exinfo import Builtin_ExInfo
 else:

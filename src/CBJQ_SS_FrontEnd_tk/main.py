@@ -17,7 +17,7 @@ import PIL.Image
 import unicodedata
 from ctypes import windll
 from CBJQ_SS_FrontEnd_tk.programinfo import *
-if getattr(sys, 'frozen', False):
+if build_flag is True and builtin_exinfo.hasSplash is True:
     import pyi_splash
 
 # Windows Section
@@ -578,7 +578,7 @@ class CBJQ_SS_FrontEnd_tk:
                                                          image=self.aboutWindow_programIconImgLabel_ImgVar)
         # Define aboutWindow_contentLabel
         self.aboutWindow_contentLabel_Var = tkinter.StringVar(
-            value=programinfo_str1 + builtin_exinfo.summary_str_singleline())
+            value=programinfo_str1)
         self.aboutWindow_contentLabel = ttk.Label(self.aboutWindow, textvariable=self.aboutWindow_contentLabel_Var,
                                                   padding=(10, 10))
 
@@ -1004,7 +1004,8 @@ if __name__ == '__main__':
                         f'Program Version: {program_version_str}\n'
                         f'Project Name: {project_name}\n'
                         f'Project Link: {project_link}\n'
-                        f'License Type: {license_type}\n')
+                        f'License Type: {license_type}\n'
+                        f'{builtin_exinfo.summary_str_singleline()}\n')
 
     print(programinfo_str1)
 
@@ -1017,10 +1018,7 @@ if __name__ == '__main__':
             ApplyGlobalConfig(appConfig)
 
     frontend_programdir = osp.normpath(osp.dirname(__file__))
-    if osp.exists(__file__):
-        build_flag = False
-    else:
-        build_flag = True
+
     print(f'frontend_programdir: {frontend_programdir}')
     # input()
     argv = sys.argv
@@ -1033,7 +1031,7 @@ if __name__ == '__main__':
         changeCWD(arg_cwd)
     appConfig = PackGlobalConfig(returnIfNotNone(appConfig, {}))
 
-    if getattr(sys, 'frozen', False):
+    if build_flag is True and builtin_exinfo.hasSplash is True:
         pyi_splash.close()
 
     exec_readiness = checkExecutableReadiness('CBJQ_SS.main.bat')
