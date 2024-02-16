@@ -10,3 +10,5 @@ temp/
 src/CBJQ_SS_FrontEnd_tk/log.txt
 src/CBJQ_SS_FrontEnd_tk/builtin_exinfo.py
 src/CBJQ_SS_FrontEnd_tk/builtin_exinfo-*.py
+res/references.html
+图标列表.html
