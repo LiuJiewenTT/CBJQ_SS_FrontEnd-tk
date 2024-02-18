@@ -1,7 +1,8 @@
 .idea
 __pycache__
 venv
-keep_local
+keep_local/*
+!keep_local/build
 src/CBJQ_SS_FrontEnd_tk/*.config.json
 res/表情包
 res/启动页资源/预设启动图/截图/*
