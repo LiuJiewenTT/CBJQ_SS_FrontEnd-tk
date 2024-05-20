@@ -242,8 +242,8 @@ class CBJQ_SS_FrontEnd_tk_Splash:
     close_button_framesize = (50, 50)
     quitProgram_flag: int = 0
 
-    def __init__(self, imgpathinfolist: List[Dict[str, str]], size: Tuple[int, int] = (640, 360),
-                 isRandom: bool = True, autoSkipTime: int = 0, splashWindowKind: str = 'borderless'):
+    def __init__(self, imgpathinfolist: List[Dict[str, str]], size: Tuple[int, int] = (960, 540),
+                 isRandom: bool = True, autoSkipTime: int = 0, splashWindowKind: str = 'true-borderless'):
         idx = 0
         if len(imgpathinfolist) <= 0:
             self.broken = True
@@ -762,7 +762,17 @@ class CBJQ_SS_FrontEnd_tk:
         elif returncode == 4:
             return '目的地的启动器并非符号链接，非本程序创建。'
         elif returncode == 5:
-            return '启动器链接失败。 '
+            return '启动器链接失败。'
+        elif returncode == 6:
+            return '目的地的启动设置文件并非符号链接，非本程序创建。'
+        elif returncode == 7:
+            return '切服器未找到此服务器所需的启动配置实际文件。'
+        elif returncode == 8:
+            return '启动设置链接失败。'
+        elif returncode == 9:
+            return '在未启用国服国际服支持的情景下断开链接失败。'
+        elif returncode == 10:
+            return '不存在实际启动器文件。'
         return '未查找到解释'
 
     def getResultBonus_pics_success(self, idx: Union[None, int] = None) -> Union[None, PIL.ImageTk.PhotoImage]:
