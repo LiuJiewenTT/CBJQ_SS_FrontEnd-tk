@@ -20,6 +20,8 @@ from ctypes import windll
 from CBJQ_SS_FrontEnd_tk.programinfo import *
 if build_flag is True and builtin_exinfo.hasSplash is True:
     import pyi_splash
+from StoppableThread import StoppableThread
+
 
 # Windows Section
 GWL_STYLE = -16
@@ -714,20 +716,45 @@ class CBJQ_SS_FrontEnd_tk:
                     self.displayLog_text.insertAndScrollToEnd(f'sp.pid: {sp.pid}')
                     self.displayLog_text.insertAndScrollToEnd(strOverDivider('[+]' + '运行报告', '-', self.divider_length,
                                                                              self.displayLog_text_font))
-                    while True:
-                        # print('to read')
-                        try:
-                            output = sp.stdout.__next__()
-                            # print(output.encode())
-                        except StopIteration:
-                            break
-                        # output = sp.stdout.readline()
-                        # print(f'[stdout]: {i}', end='')
-                        # self.displayLog_text.insert('end', i)
-                        # self.displayLog_text.yview_moveto(1)
-                        self.displayLog_text.insertAndScrollToEnd(output, end='')  # instance method
-                        # self.displayLog_text.update()
+
+                    flag_supervising = False
+
+                    def readoutput():
+                        nonlocal flag_supervising
+                        while sp.poll() is None:
+                            # print('to read')
+                            try:
+                                output = sp.stdout.__next__()
+                                # print(output.encode())
+                            except StopIteration:
+                                break
+
+                            # Supervise detection section is designed for StartWrapper v1.0.1
+                            if output == 'Supervise mode enabled.\n':
+                                flag_supervising = True
+                            elif output == 'Supervise mode is not ready for this.\n':
+                                flag_supervising = False
+
+                            # output = sp.stdout.readline()
+                            # print(f'[stdout]: {i}', end='')
+                            # self.displayLog_text.insert('end', i)
+                            # self.displayLog_text.yview_moveto(1)
+                            self.displayLog_text.insertAndScrollToEnd(output, end='')  # instance method
+                            # self.displayLog_text.update()
+
+                    readoutput_thread = StoppableThread(target=readoutput, daemon=True)
+                    readoutput_thread.start()
+                    sp.wait()
                     print('')
+                    if readoutput_thread.is_alive():
+                        if flag_supervising:
+                            print('GUI is runing for supervising section.')
+                            readoutput_thread.join()
+                        else:
+                            print('尝试中断thread')
+                            readoutput_thread.terminate_thread()
+                            print('已完成')
+
                     self.displayLog_text.insertAndScrollToEnd(
                         strOverDivider('[-]' + f'运行后报告(pid: {sp.pid})', '-', self.divider_length,
                                        self.displayLog_text_font))
