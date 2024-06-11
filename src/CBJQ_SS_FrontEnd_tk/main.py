@@ -4,7 +4,7 @@ import shutil
 import os.path as osp
 import os
 import sys
-from typing import Dict, Tuple, Callable, Union, Any, List
+from typing import Dict, Tuple, Callable, Union, Any, List, Literal
 import time
 from functools import partial
 import threading
@@ -417,6 +417,7 @@ class CBJQ_SS_FrontEnd_tk:
     resutlBonus_pics_framesize: Tuple[int, int] = (200, 200)
     resultBonus_pics_success_list: List[Dict]
     resultBonus_pics_fail_list: List[Dict]
+    flag_supervise_mode_support: str = Literal["auto", "disabled"]  # 指示是否启用特化设计
 
     def __init__(self, **kwargs):
         """初始化
@@ -747,13 +748,19 @@ class CBJQ_SS_FrontEnd_tk:
                     sp.wait()
                     print('')
                     if readoutput_thread.is_alive():
-                        if flag_supervising:
-                            print('GUI is runing for supervising section.')
+                        if self.flag_supervise_mode_support == 'disabled':
                             readoutput_thread.join()
-                        else:
-                            print('尝试中断thread')
-                            readoutput_thread.terminate_thread()
-                            print('已完成')
+                        elif self.flag_supervise_mode_support == 'auto':
+                            print('supervise_mode_support: auto')
+                            if flag_supervising:
+                                print('GUI is runing for supervising section.')
+                                readoutput_thread.join()
+                            else:
+                                print('尝试中断thread')
+                                if not readoutput_thread.terminate_thread():
+                                    print('中断成功')
+                                else:
+                                    readoutput_thread.join()
 
                     self.displayLog_text.insertAndScrollToEnd(
                         strOverDivider('[-]' + f'运行后报告(pid: {sp.pid})', '-', self.divider_length,
@@ -923,6 +930,7 @@ class CBJQ_SS_FrontEnd_tk:
                                                           self.resutlBonus_pics_framesize)
         self.resultBonus_pics_success_list = config.get('resultBonus_pics_success_list')
         self.resultBonus_pics_fail_list = config.get('resultBonus_pics_fail_list')
+        self.flag_supervise_mode_support = returnIfNotNone(config.get('supervise_mode_support'), 'auto')
         return
 
     def PackConfig(self) -> dict:
@@ -937,6 +945,7 @@ class CBJQ_SS_FrontEnd_tk:
         retv['resutlBonus_pics_framesize'] = self.resutlBonus_pics_framesize
         retv['resultBonus_pics_success_list'] = self.resultBonus_pics_success_list
         retv['resultBonus_pics_fail_list'] = self.resultBonus_pics_fail_list
+        retv['supervise_mode_support'] = self.flag_supervise_mode_support
         self.config = retv
         return retv
 

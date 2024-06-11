@@ -23,5 +23,7 @@ class StoppableThread(threading.Thread):
         res = ctypes.windll.kernel32.TerminateThread(thread_id, 0)
         if res == 0:
             print("Failed to terminate thread.")
+            return 1
         else:
             print("Thread terminated successfully.")
+            return 0
