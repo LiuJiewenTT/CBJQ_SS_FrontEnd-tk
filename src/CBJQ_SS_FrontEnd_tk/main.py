@@ -5,6 +5,7 @@ import os.path as osp
 import os
 import sys
 from typing import Dict, Tuple, Callable, Union, Any, List
+import time
 from functools import partial
 import threading
 import orjson
@@ -995,6 +996,7 @@ if __name__ == '__main__':
     splashWindowKind: str = 'borderless'  # borderless, true-borderless, photo-frame, non-resizeable-normal （其它暂不应使用）
     showSplash_autoSkipAfter: int = 0
     splashSize: Tuple[int, int] = (640, 360)
+    splashSize: Tuple[int, int] = (960, 540)
     showSplashRandomly: bool = True
     splash_ImgPathInfoList: List[Dict[str, str]] = []
     backend_path = 'CBJQ_SS.main.bat'
