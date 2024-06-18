@@ -761,6 +761,7 @@ class CBJQ_SS_FrontEnd_tk:
                                     print('中断成功')
                                 else:
                                     readoutput_thread.join()
+                            print('GUI readoutput thread ends.')
 
                     self.displayLog_text.insertAndScrollToEnd(
                         strOverDivider('[-]' + f'运行后报告(pid: {sp.pid})', '-', self.divider_length,
