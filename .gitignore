@@ -14,3 +14,5 @@ src/CBJQ_SS_FrontEnd_tk/builtin_exinfo-*.py
 res/references.html
 README.html
 图标列表.html
+log.txt
+CBJQ_SS_FrontEnd-tk.config.json
