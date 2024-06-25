@@ -121,7 +121,7 @@ def func_none(*args):
 
 returnIfNotNone: Callable[[Any, Any], Any] = (lambda x, default: default if x is None else x)
 
-returnIFNotLogicalFalse: Callable[[Any, Any], Any] = (lambda x, default: default if x else x)
+returnIfNotLogicalFalse: Callable[[Any, Any], Any] = (lambda x, default: x if x else default)
 
 unicodeCharWidth: Callable[[str], int] = (lambda x: 2 if unicodedata.east_asian_width(x) in 'WF' else 1)
 
@@ -414,7 +414,8 @@ class CBJQ_SS_FrontEnd_tk:
     backend_path: str
     displayLog_frame_state: bool
     divider_length: int = 50
-    resutlBonus_pics_framesize: Tuple[int, int] = (200, 200)
+    # resutlBonus_pics_framesize: Tuple[int, int] = (200, 200)
+    resutlBonus_pics_framesize: Tuple[int, int] = (300, 300)
     resultBonus_pics_success_list: List[Dict]
     resultBonus_pics_fail_list: List[Dict]
     flag_supervise_mode_support: str = Literal["auto", "disabled"]  # 指示是否启用特化设计
@@ -1007,6 +1008,7 @@ def PackGlobalConfig(AppConfig: dict) -> dict:
     retv = AppConfig
     # global backend_path, server_list
     retv['LOCKCONFIG'] = LOCKCONFIG
+    retv['enforce_use_pwd_config_state'] = enforce_use_pwd_config_state
     retv['backend_path'] = backend_path
     retv['server_list'] = server_list
     retv['showSplash'] = showSplash
@@ -1024,15 +1026,18 @@ def PackGlobalConfig(AppConfig: dict) -> dict:
 
 if __name__ == '__main__':
     config_filename = 'CBJQ_SS_FrontEnd-tk.config.json'
+    pwd: str
+    pwd_config_path: str
     appConfig: Union[None, dict] = None
     LOCKCONFIG: bool = False
     cwd: str = '.'
     cwd_old: str = ''
     cwd_initial: str = os.getcwd()
+    enforce_use_pwd_config_state: str = 'disabled'
     showSplash: bool = True
-    splashWindowKind: str = 'borderless'  # borderless, true-borderless, photo-frame, non-resizeable-normal （其它暂不应使用）
+    splashWindowKind: str = 'true-borderless'  # borderless, true-borderless, photo-frame, non-resizeable-normal （其它暂不应使用）
     showSplash_autoSkipAfter: int = 0
-    splashSize: Tuple[int, int] = (640, 360)
+    # splashSize: Tuple[int, int] = (640, 360)
     splashSize: Tuple[int, int] = (960, 540)
     showSplashRandomly: bool = True
     splash_ImgPathInfoList: List[Dict[str, str]] = []
@@ -1058,26 +1063,50 @@ if __name__ == '__main__':
 
     print(programinfo_str1)
 
-    if osp.exists(config_filename):
+    frontend_programdir = osp.normpath(osp.dirname(__file__))
+    print(f'frontend_programdir: {frontend_programdir}')
+    # input()
+
+    argv = sys.argv
+    pwd = osp.normpath(osp.dirname(argv[0]))
+    pwd_config_path = osp.join(osp.dirname(argv[0]), config_filename)
+    print(f"PWD: {pwd}")
+    if osp.exists(pwd_config_path):
         with open(config_filename, 'r', encoding='UTF-8') as f:
             config_content = f.read()
             if config_content:
                 appConfig: dict = orjson.loads(config_content)
         if appConfig is not None:
-            ApplyGlobalConfig(appConfig)
+            enforce_use_pwd_config_state = returnIfNotLogicalFalse(appConfig.get('enforce_use_pwd_config_state'),
+                                                                   enforce_use_pwd_config_state)
+    print(f"enforce_use_pwd_config_state: {enforce_use_pwd_config_state}")
 
-    frontend_programdir = osp.normpath(osp.dirname(__file__))
-
-    print(f'frontend_programdir: {frontend_programdir}')
-    # input()
-    argv = sys.argv
     arg_cwd = ''
     for i in range(0, len(argv)):
         if argv[i] == '-cwd':
             arg_cwd = argv[i + 1]
             break
-    if arg_cwd != '':
+
+    if enforce_use_pwd_config_state == 'fully':
+        # changeCWD(pwd)
+        arg_cwd = None
+        if appConfig is not None:
+            ApplyGlobalConfig(appConfig)
+    elif enforce_use_pwd_config_state == 'allow-arg-only':
+        if appConfig is not None:
+            ApplyGlobalConfig(appConfig)
+    else:
+        if osp.exists(config_filename):
+            with open(config_filename, 'r', encoding='UTF-8') as f:
+                config_content = f.read()
+                if config_content:
+                    appConfig: dict = orjson.loads(config_content)
+            if appConfig is not None:
+                ApplyGlobalConfig(appConfig)
+
+    if arg_cwd != '' and arg_cwd is not None:
         changeCWD(arg_cwd)
+
     appConfig = PackGlobalConfig(returnIfNotNone(appConfig, {}))
 
     if build_flag is True and builtin_exinfo.hasSplash is True:
