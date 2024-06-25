@@ -1033,7 +1033,7 @@ if __name__ == '__main__':
     cwd: str = '.'
     cwd_old: str = ''
     cwd_initial: str = os.getcwd()
-    enforce_use_pwd_config_state: str = 'disabled'
+    enforce_use_pwd_config_state: str = 'allow-arg-only'  # disabled, allow-arg-only, fully
     showSplash: bool = True
     splashWindowKind: str = 'true-borderless'  # borderless, true-borderless, photo-frame, non-resizeable-normal （其它暂不应使用）
     showSplash_autoSkipAfter: int = 0
