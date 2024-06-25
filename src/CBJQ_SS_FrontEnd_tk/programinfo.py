@@ -9,8 +9,8 @@ project_name = 'CBJQ_SS_FrontEnd-tk'
 project_link = 'https://github.com/LiuJiewenTT/CBJQ_SS_FrontEnd-tk'
 product_name = '尘白禁区切服器'
 program_name = 'CBJQ_SS_FrontEnd-tk'
-product_version = (1, 1, 1, 0)
-program_version = (1, 1, 1, 0)
+product_version = (1, 1, 2, 0)
+program_version = (1, 1, 2, 0)
 program_version_str: str
 program_iconpicture_paths = [
     'res/icon1.png',
