@@ -20,7 +20,7 @@ from ctypes import windll
 from CBJQ_SS_FrontEnd_tk.programinfo import *
 if build_flag is True and builtin_exinfo.hasSplash is True:
     import pyi_splash
-from StoppableThread import StoppableThread
+from CBJQ_SS_FrontEnd_tk.StoppableThread import StoppableThread
 
 
 # Windows Section
