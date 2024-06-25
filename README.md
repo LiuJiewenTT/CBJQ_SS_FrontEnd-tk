@@ -12,6 +12,12 @@
 
 作者的Python版本为`3.8.8`，使用的库见<venv/Lib/installation_notes/pip_list.txt>。
 
+配置Virtual Environment:
+
+``` shell
+pip -r requirements.txt
+```
+
 ### 构建exe
 
 此项目使用PyInstaller-6.3.0构建。
@@ -85,7 +91,9 @@
     200										# 高度。单位：像素
   ],
   "resultBonus_pics_success_list": null,	# 运行后报告显示的在程序运行正常时的表情包。同上splash_ImgPathInfoList的格式。
-  "resultBonus_pics_fail_list": null		# 运行后报告显示的在程序运行出错时的表情包。同上splash_ImgPathInfoList的格式。
+  "resultBonus_pics_fail_list": null,		# 运行后报告显示的在程序运行出错时的表情包。同上splash_ImgPathInfoList的格式。
+  "supervise_mode_support": "auto",			# 是否启用supervise适配以自动退出。取值：auto/disabled
+  "enforce_use_pwd_config_state": "disabled"	# 设置强制使用程序目录内配置的严格级别。取值："disabled"不启用, "allow-arg-only"启用强制但放行命令行参数, "fully"完全启用禁用一切外部输入
 }
 ```
 
