@@ -1068,8 +1068,8 @@ if __name__ == '__main__':
     # input()
 
     argv = sys.argv
-    pwd = osp.normpath(osp.dirname(argv[0]))
-    pwd_config_path = osp.join(osp.dirname(argv[0]), config_filename)
+    pwd = osp.abspath(osp.normpath(osp.dirname(argv[0])))
+    pwd_config_path = osp.abspath(osp.join(osp.dirname(argv[0]), config_filename))
     print(f"PWD: {pwd}")
     if osp.exists(pwd_config_path):
         with open(pwd_config_path, 'r', encoding='UTF-8') as f:
