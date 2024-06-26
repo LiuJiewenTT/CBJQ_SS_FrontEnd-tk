@@ -1133,6 +1133,9 @@ if __name__ == '__main__':
         FrontEnd_instance.ApplyConfig(appConfig)
     else:
         FrontEnd_instance = CBJQ_SS_FrontEnd_tk(backend_path=backend_path, server_list=server_list)
-    FrontEnd_instance.config_savepath = osp.join(cwd_old, config_filename)
+    if enforce_use_pwd_config_state == 'fully' or enforce_use_pwd_config_state == 'allow-arg-only':
+        FrontEnd_instance.config_savepath = pwd_config_path
+    else:
+        FrontEnd_instance.config_savepath = osp.join(cwd_initial, config_filename)
     # print(cwd_old)
     FrontEnd_instance.run()
