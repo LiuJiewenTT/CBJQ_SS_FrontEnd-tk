@@ -1072,7 +1072,7 @@ if __name__ == '__main__':
     pwd_config_path = osp.join(osp.dirname(argv[0]), config_filename)
     print(f"PWD: {pwd}")
     if osp.exists(pwd_config_path):
-        with open(config_filename, 'r', encoding='UTF-8') as f:
+        with open(pwd_config_path, 'r', encoding='UTF-8') as f:
             config_content = f.read()
             if config_content:
                 appConfig: dict = orjson.loads(config_content)
@@ -1105,6 +1105,7 @@ if __name__ == '__main__':
                 ApplyGlobalConfig(appConfig)
 
     if arg_cwd != '' and arg_cwd is not None:
+        print(f'ARG CWD: {arg_cwd}')
         changeCWD(arg_cwd)
 
     appConfig = PackGlobalConfig(returnIfNotNone(appConfig, {}))
