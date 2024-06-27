@@ -1086,13 +1086,15 @@ if __name__ == '__main__':
         if argv[i] == '-cwd':
             arg_cwd = argv[i + 1]
             break
+    arg_cwd_abspath = osp.abspath(arg_cwd)
 
     if enforce_use_pwd_config_state == 'fully':
-        # changeCWD(pwd)
+        changeCWD(pwd)
         arg_cwd = None
         if appConfig is not None:
             ApplyGlobalConfig(appConfig)
     elif enforce_use_pwd_config_state == 'allow-arg-only':
+        changeCWD(pwd)
         if appConfig is not None:
             ApplyGlobalConfig(appConfig)
     else:
@@ -1106,7 +1108,9 @@ if __name__ == '__main__':
 
     if arg_cwd != '' and arg_cwd is not None:
         print(f'ARG CWD: {arg_cwd}')
-        changeCWD(arg_cwd)
+        if arg_cwd != arg_cwd_abspath:
+            print(f'ARG CWD ABS: {arg_cwd_abspath}')
+        changeCWD(arg_cwd_abspath)
 
     appConfig = PackGlobalConfig(returnIfNotNone(appConfig, {}))
 
