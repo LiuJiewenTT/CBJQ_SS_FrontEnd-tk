@@ -1070,7 +1070,7 @@ if __name__ == '__main__':
 
     print(programinfo_str1)
 
-    frontend_programdir = osp.normpath(osp.dirname(__file__))
+    frontend_programdir = osp.normpath(osp.abspath(osp.dirname(__file__)))
     print(f'frontend_programdir: {frontend_programdir}')
     # input()
 
@@ -1093,7 +1093,7 @@ if __name__ == '__main__':
         if argv[i] == '-cwd':
             arg_cwd = argv[i + 1]
             break
-    arg_cwd_abspath = osp.abspath(arg_cwd)
+    arg_cwd_abspath = osp.normpath(osp.abspath(arg_cwd))
 
     if enforce_use_pwd_config_state == 'fully':
         enforce_use_pwd_config_section_notedown_logpath(osp.join(cwd, 'log.txt'),
