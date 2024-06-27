@@ -1024,6 +1024,13 @@ def PackGlobalConfig(AppConfig: dict) -> dict:
     return retv
 
 
+def enforce_use_pwd_config_section_notedown_logpath(log_filepath: str, savepath: str = '.\\log_elsewhere.txt'):
+    the_path = osp.normpath(osp.abspath(log_filepath))
+    savepath_abs = osp.normpath(osp.abspath(savepath))
+    with open(savepath_abs, "w", encoding='UTF-8') as file_handle:
+        file_handle.write(f'Path of the log elsewhere: {the_path}')
+
+
 if __name__ == '__main__':
     config_filename = 'CBJQ_SS_FrontEnd-tk.config.json'
     pwd: str
@@ -1089,11 +1096,15 @@ if __name__ == '__main__':
     arg_cwd_abspath = osp.abspath(arg_cwd)
 
     if enforce_use_pwd_config_state == 'fully':
+        enforce_use_pwd_config_section_notedown_logpath(osp.join(cwd, 'log.txt'),
+                                                        savepath=osp.join(pwd, 'log_elsewhere.txt'))
         changeCWD(pwd)
         arg_cwd = None
         if appConfig is not None:
             ApplyGlobalConfig(appConfig)
     elif enforce_use_pwd_config_state == 'allow-arg-only':
+        enforce_use_pwd_config_section_notedown_logpath(osp.join(cwd, 'log.txt'),
+                                                        savepath=osp.join(pwd, 'log_elsewhere.txt'))
         changeCWD(pwd)
         if appConfig is not None:
             ApplyGlobalConfig(appConfig)
