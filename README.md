@@ -4,7 +4,7 @@
 
 当前版本已支持配置文件。
 
-<img src="res/icon1.png" style="width:128px; height: 128px"><img src="res/里芙带来了她的两个包子-透明背景.png" style="width:128px; height: 128px"><img src="res/里芙和她的两个包子.png" style="width:128px; height: 128px"> 香香滴包子，里芙我们一起吃！
+<img src="res/辰星-云篆 团子.jpg" style="width:128px; height: 128px"><img src="res/里芙带来了她的两个包子-透明背景.png" style="width:128px; height: 128px"><img src="res/里芙和她的两个包子.png" style="width:128px; height: 128px">
 
 ## 构建
 
@@ -67,8 +67,8 @@ pip -r requirements.txt
   "splashWindowKind": "true-borderless",	# 设置启动页边框风格。
   "showSplash_autoSkipAfter": 0,			# 设置启动页自动跳过计时时长，低于（或等于）250ms不生效。
   "splashSize": [							# 设置启动页在启动时的最大尺寸。启动页会自动适配启动图尺寸。
-    640,									# 宽度。单位：像素
-    360										# 高度。单位：像素
+    960,									# 宽度。单位：像素
+    540										# 高度。单位：像素
   ],
   "showSplashRandomly": true,				# 设置是否随机选取启动图
   "splash_ImgPathInfoList": [				# 启动图列表
@@ -87,8 +87,8 @@ pip -r requirements.txt
   "displayLog_ifWrapChar": true,				# 设置日志文本是否启用自动换行。
   "displayLog_text_ifUseFixedFont": false,		# 设置日志文本是否使用等宽字体。在Win10上，不使用等宽字体将会使用更好看的“微软雅黑”字体。
   "resutlBonus_pics_framesize": [			# 运行后报告显示的表情包的最大尺寸限制
-    200,									# 宽度。单位：像素
-    200										# 高度。单位：像素
+    300,									# 宽度。单位：像素
+    300										# 高度。单位：像素
   ],
   "resultBonus_pics_success_list": null,	# 运行后报告显示的在程序运行正常时的表情包。同上splash_ImgPathInfoList的格式。
   "resultBonus_pics_fail_list": null,		# 运行后报告显示的在程序运行出错时的表情包。同上splash_ImgPathInfoList的格式。

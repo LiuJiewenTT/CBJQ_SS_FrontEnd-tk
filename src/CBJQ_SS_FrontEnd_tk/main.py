@@ -270,7 +270,9 @@ class CBJQ_SS_FrontEnd_tk_Splash:
 
         self.root_window = tkinter.Tk()
         self.root_window.title(f'{product_name} - {author_name}')
-        self.root_window.iconphoto(True, tkinter.PhotoImage(file=getProgramResourcePath(program_iconpicture_path)))
+        # self.root_window.iconphoto(True, tkinter.PhotoImage(file=getProgramResourcePath(program_iconpicture_path)))
+        self.root_window.iconphoto(True, PIL.ImageTk.PhotoImage(
+            PIL.Image.open(getProgramResourcePath(program_iconpicture_path))))
         # self.root_window.configure(bg='blue')
         self.root_window.scheduleRecords = []
 
@@ -449,7 +451,9 @@ class CBJQ_SS_FrontEnd_tk:
         self.root_window.title(frontend_name)
 
         # print(getProgramResourcePath('res/icon1.png'))
-        self.root_window.iconphoto(True, tkinter.PhotoImage(file=getProgramResourcePath(program_iconpicture_path)))  # 使用核心目录
+        # self.root_window.iconphoto(True, tkinter.PhotoImage(file=getProgramResourcePath(program_iconpicture_path)))  # 使用核心目录
+        self.root_window.iconphoto(True, PIL.ImageTk.PhotoImage(
+            PIL.Image.open(getProgramResourcePath(program_iconpicture_path))))
         # self.root_window.iconphoto(True, tkinter.PhotoImage(file=frontend_programdir + '/../../res/icon1.png'))
         # Dev: define img
         # self.img1 = PIL.ImageTk.PhotoImage(PIL.Image.open(getProgramResourcePath('res/让芙提雅老师看看谁在.jpg')))

@@ -9,15 +9,15 @@ project_name = 'CBJQ_SS_FrontEnd-tk'
 project_link = 'https://github.com/LiuJiewenTT/CBJQ_SS_FrontEnd-tk'
 product_name = '尘白禁区切服器'
 program_name = 'CBJQ_SS_FrontEnd-tk'
-product_version = (1, 1, 2, 0)
-program_version = (1, 1, 2, 0)
+product_version = (1, 1, 3, 0)
+program_version = (1, 1, 3, 0)
 program_version_str: str
 program_iconpicture_paths = [
-    'res/icon1.png',
+    'res/辰星-云篆 团子.jpg',
     'res/里芙带来了她的两个包子-透明背景.png',
     'res/里芙和她的两个包子.png',
 ]
-program_iconpicture_idx = 1
+program_iconpicture_idx = 0
 program_iconpicture_path: str
 frontend_name = '尘白禁区服务器切换器 - 前端'
 license_type = 'MIT License'
