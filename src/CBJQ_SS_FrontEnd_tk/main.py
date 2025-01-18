@@ -18,10 +18,10 @@ import PIL.Image
 import unicodedata
 from ctypes import windll
 from CBJQ_SS_FrontEnd_tk.programinfo import *
+
 if build_flag is True and builtin_exinfo.hasSplash is True:
     import pyi_splash
 from CBJQ_SS_FrontEnd_tk.StoppableThread import StoppableThread
-
 
 # Windows Section
 GWL_STYLE = -16
@@ -856,6 +856,13 @@ class CBJQ_SS_FrontEnd_tk:
                     imgpath = getProgramResourcePath(imgpath)
                 elif imgtype == 'nonbuildin':
                     imgpath = getNonBuildinProgramResourcePath(imgpath)
+
+                if not osp.exists(imgpath):
+                    self.resultBonus_pics_success_list[imgidx].update({'path': ''})
+                    raise FileNotFoundError(f'{imgpath} not found.')
+                if not osp.isfile(imgpath):
+                    return None
+
                 global runtime_global_resultBonus_pics_success_list_photoimage
                 if 'runtime_global_resultBonus_pics_success_list_photoimage' not in globals():
                     runtime_global_resultBonus_pics_success_list_photoimage = [None] * len(
@@ -895,6 +902,13 @@ class CBJQ_SS_FrontEnd_tk:
                     imgpath = getProgramResourcePath(imgpath)
                 elif imgtype == 'nonbuildin':
                     imgpath = getNonBuildinProgramResourcePath(imgpath)
+
+                if not osp.exists(imgpath):
+                    self.resultBonus_pics_fail_list[imgidx].update({'path': ''})
+                    raise FileNotFoundError(f'{imgpath} not found.')
+                if not osp.isfile(imgpath):
+                    return None
+
                 global runtime_global_resultBonus_pics_fail_list_photoimage
                 if 'runtime_global_resultBonus_pics_fail_list_photoimage' not in globals():
                     runtime_global_resultBonus_pics_fail_list_photoimage = [None] * len(
@@ -919,6 +933,23 @@ class CBJQ_SS_FrontEnd_tk:
             # widget.insert(tkinter.CURRENT+' + 1c', '\n')
             return True
         return False
+
+    def clean_illegal_item_from_bonusList(self, bonusList: List[Dict[str, str], None]) -> List[Dict[str, str], None]:
+        new_bonusList = []
+
+        length_bonusList = len(bonusList)
+        for i in range(0, length_bonusList):
+            item = bonusList[i]
+            imgtype = item.get('type')
+            imgpath = item.get('path')
+            if imgtype == 'buildin':
+                imgpath = getProgramResourcePath(imgpath)
+            elif imgtype == 'nonbuildin':
+                imgpath = getNonBuildinProgramResourcePath(imgpath)
+
+            if osp.exists(imgpath) and osp.isfile(imgpath):
+                new_bonusList.append(item)
+        return new_bonusList
 
     def ApplyConfig(self, config: dict):
         self.config = config
@@ -947,8 +978,10 @@ class CBJQ_SS_FrontEnd_tk:
 
         self.resutlBonus_pics_framesize = returnIfNotNone(config.get('resutlBonus_pics_framesize'),
                                                           self.resutlBonus_pics_framesize)
-        self.resultBonus_pics_success_list = config.get('resultBonus_pics_success_list')
-        self.resultBonus_pics_fail_list = config.get('resultBonus_pics_fail_list')
+        self.resultBonus_pics_success_list = self.clean_illegal_item_from_bonusList(
+            config.get('resultBonus_pics_success_list'))
+        self.resultBonus_pics_fail_list = self.clean_illegal_item_from_bonusList(
+            config.get('resultBonus_pics_fail_list'))
         self.flag_supervise_mode_support = returnIfNotNone(config.get('supervise_mode_support'), 'auto')
         return
 
