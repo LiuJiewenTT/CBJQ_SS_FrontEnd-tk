@@ -937,6 +937,8 @@ class CBJQ_SS_FrontEnd_tk:
     def clean_illegal_item_from_bonusList(self, bonusList: List[Union[Dict[str, str], None]]) -> List[Union[Dict[str, str], None]]:
         new_bonusList = []
 
+        if bonusList is None:
+            return new_bonusList
         length_bonusList = len(bonusList)
         for i in range(0, length_bonusList):
             item = bonusList[i]
