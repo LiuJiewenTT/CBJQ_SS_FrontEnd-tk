@@ -753,7 +753,7 @@ class CBJQ_SS_FrontEnd_tk:
 
                     readoutput_thread = StoppableThread(target=readoutput, daemon=True)
                     readoutput_thread.start()
-
+                    sp.wait()
                     print('')
                     if readoutput_thread.is_alive():
                         if self.flag_supervise_mode_support == 'disabled':
@@ -771,8 +771,6 @@ class CBJQ_SS_FrontEnd_tk:
                                     readoutput_thread.join()
                             print('GUI readoutput thread ends.')
 
-                    sp.wait()
-
                     self.displayLog_text.insertAndScrollToEnd(
                         strOverDivider('[-]' + f'运行后报告(pid: {sp.pid})', '-', self.divider_length,
                                        self.displayLog_text_font))
@@ -780,9 +778,7 @@ class CBJQ_SS_FrontEnd_tk:
                     self.displayLog_text.insertAndScrollToEnd(f'返回值: {sp.poll()}')
                     self.displayLog_text.insertAndScrollToEnd(f'返回值表明的运行结果: {self.resolveBackendRetv(sp.returncode)}')
                     if self.displayInText_ResultBonus_pics(sp.returncode, self.displayLog_text):
-                        self.displayLog_text.insert(tkinter.END, '\n')
-                    if sp.poll():
-                        sp.kill()
+                        self.displayLog_text.insertAndScrollToEnd('')
             else:
                 self.displayLog_text.insertAndScrollToEnd('后端程序未就绪：找不到后端程序，请移动切服器或修改切服器配置。')
             self.displayLog_text.insertAndScrollToEnd(strOverDivider('[-]' + '', '=', self.divider_length,
