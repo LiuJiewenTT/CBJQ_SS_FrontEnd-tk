@@ -1,10 +1,17 @@
 # 《尘白禁区》服务器切换器 前端（tk）
 
-此前端程序由tkinter库支持。
+<div style="align-items: center; justify-content: center; display: flex; margin: 10px; gap: 10px">
+   <img alt="GitHub Downloads (all assets, all releases)" src="https://img.shields.io/github/downloads/LiuJiewenTT/CBJQ_SS_FrontEnd-tk/total">
+   <img alt="GitHub Release" src="https://img.shields.io/github/v/release/LiuJiewenTT/CBJQ_SS_FrontEnd-tk">
+   <img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/LiuJiewenTT/CBJQ_SS_FrontEnd-tk/jekyll-gh-pages.yml">
+   <img alt="GitHub License" src="https://img.shields.io/github/license/LiuJiewenTT/CBJQ_SS_FrontEnd-tk">
+</div>
+
+此前端程序主要使用tkinter库实现。
 
 当前版本已支持配置文件。
 
-<div style="align-items: center; justify-content: center; display: flex; margin: 10px;">
+<div style="align-items: center; justify-content: center; display: flex; margin: 10px; gap: 20px">
    <img src="res/辰星-云篆 团子.jpg" style="width:128px; height: 128px">
    <img src="res/里芙带来了她的两个包子-透明背景.png" style="width:128px; height: 128px">
    <img src="res/里芙和她的两个包子.png" style="width:128px; height: 128px">
@@ -39,11 +46,13 @@ pip -r requirements.txt
 > 注：本程序只是前端，后端/内核请转到此项目下载：<https://github.com/LiuJiewenTT/Snowbreak_ServerSwitcher>。
 
 <details open><summary>效果图合集</summary>
-   <img src="docs/res/启动页使用效果图1.jpg" alt="启动页使用效果图1.jpg">
-   <img src="docs/res/正常结果可视化效果图1.jpg" alt="正常结果可视化效果图1.jpg">
-   <img src="docs/res/最小巧UI展示及命令行参数示例效果图1.jpg" alt="最小巧UI展示及命令行参数示例效果图1.jpg">
-   <img src="docs/res/测试服支持能力和结果可视化功能效果图1.jpg" alt="测试服支持能力和结果可视化功能效果图1.jpg">
-   <img src="docs/res/指引效果图1.jpg" alt="指引效果图1.jpg">
+   <div style="gap: 15px">
+      <img src="docs/res/启动页使用效果图1.jpg" alt="启动页使用效果图1.jpg">
+      <img src="docs/res/正常结果可视化效果图1.jpg" alt="正常结果可视化效果图1.jpg">
+      <img src="docs/res/最小巧UI展示及命令行参数示例效果图1.jpg" alt="最小巧UI展示及命令行参数示例效果图1.jpg">
+      <img src="docs/res/测试服支持能力和结果可视化功能效果图1.jpg" alt="测试服支持能力和结果可视化功能效果图1.jpg">
+      <img src="docs/res/指引效果图1.jpg" alt="指引效果图1.jpg">
+   </div>
 </details>
 
 ## 程序说明
