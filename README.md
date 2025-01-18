@@ -4,7 +4,11 @@
 
 当前版本已支持配置文件。
 
-<img src="res/辰星-云篆 团子.jpg" style="width:128px; height: 128px"><img src="res/里芙带来了她的两个包子-透明背景.png" style="width:128px; height: 128px"><img src="res/里芙和她的两个包子.png" style="width:128px; height: 128px">
+<div style="align-items: center; justify-content: center; display: flex; margin: 10px;">
+   <img src="res/辰星-云篆 团子.jpg" style="width:128px; height: 128px">
+   <img src="res/里芙带来了她的两个包子-透明背景.png" style="width:128px; height: 128px">
+   <img src="res/里芙和她的两个包子.png" style="width:128px; height: 128px">
+</div>
 
 ## 构建
 
@@ -24,9 +28,23 @@ pip -r requirements.txt
 
 ## 使用
 
+基本：
+
+双击启动就行了，你也可以发送到桌面快捷方式，并在属性的兼容性选项卡中勾选管理员权限启动。
+
+高级：
+
 当前版本在当前路径下查找脚本`CBJQ_SS.main.bat`，可以通过`-cwd [path/to/script]`切换工作目录，或在配置文件中设定。
 
-本程序只是前端，后端/内核请转到此项目下载：<https://github.com/LiuJiewenTT/Snowbreak_ServerSwitcher>。
+> 注：本程序只是前端，后端/内核请转到此项目下载：<https://github.com/LiuJiewenTT/Snowbreak_ServerSwitcher>。
+
+<details open><summary>效果图合集</summary>
+   <img src="docs/res/启动页使用效果图1.jpg" alt="启动页使用效果图1.jpg">
+   <img src="docs/res/正常结果可视化效果图1.jpg" alt="正常结果可视化效果图1.jpg">
+   <img src="docs/res/最小巧UI展示及命令行参数示例效果图1.jpg" alt="最小巧UI展示及命令行参数示例效果图1.jpg">
+   <img src="docs/res/测试服支持能力和结果可视化功能效果图1.jpg" alt="测试服支持能力和结果可视化功能效果图1.jpg">
+   <img src="docs/res/指引效果图1.jpg" alt="指引效果图1.jpg">
+</details>
 
 ## 程序说明
 
