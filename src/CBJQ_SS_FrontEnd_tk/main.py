@@ -728,6 +728,9 @@ class CBJQ_SS_FrontEnd_tk:
                     def readoutput():
                         nonlocal flag_supervising
                         while sp.poll() is None:
+                            if threading.current_thread()._stop_event.is_set():
+                                print("线程已停止")
+                                break
                             # print('to read')
                             try:
                                 output = sp.stdout.__next__()
@@ -750,7 +753,7 @@ class CBJQ_SS_FrontEnd_tk:
 
                     readoutput_thread = StoppableThread(target=readoutput, daemon=True)
                     readoutput_thread.start()
-                    sp.wait()
+
                     print('')
                     if readoutput_thread.is_alive():
                         if self.flag_supervise_mode_support == 'disabled':
@@ -768,6 +771,8 @@ class CBJQ_SS_FrontEnd_tk:
                                     readoutput_thread.join()
                             print('GUI readoutput thread ends.')
 
+                    sp.wait()
+
                     self.displayLog_text.insertAndScrollToEnd(
                         strOverDivider('[-]' + f'运行后报告(pid: {sp.pid})', '-', self.divider_length,
                                        self.displayLog_text_font))
@@ -776,6 +781,8 @@ class CBJQ_SS_FrontEnd_tk:
                     self.displayLog_text.insertAndScrollToEnd(f'返回值表明的运行结果: {self.resolveBackendRetv(sp.returncode)}')
                     if self.displayInText_ResultBonus_pics(sp.returncode, self.displayLog_text):
                         self.displayLog_text.insert(tkinter.END, '\n')
+                    if sp.poll():
+                        sp.kill()
             else:
                 self.displayLog_text.insertAndScrollToEnd('后端程序未就绪：找不到后端程序，请移动切服器或修改切服器配置。')
             self.displayLog_text.insertAndScrollToEnd(strOverDivider('[-]' + '', '=', self.divider_length,
@@ -814,6 +821,16 @@ class CBJQ_SS_FrontEnd_tk:
             return '在未启用国服国际服支持的情景下断开链接失败。'
         elif returncode == 10:
             return '不存在实际启动器文件。'
+        elif returncode == 11:
+            return '目的地的Game.ini文件并非符号链接，非本程序创建。'
+        elif returncode == 12:
+            return '切服器未找到此服务器所需的Game.ini实际文件。'
+        elif returncode == 13:
+            return 'Game.ini链接失败。'
+        elif returncode == 14:
+            return 'Game.ini链接断开失败。'
+        elif returncode == 15:
+            return '服务器对应的Game.ini条目文件名不合法。'
         return '未查找到解释'
 
     def getResultBonus_pics_success(self, idx: Union[None, int] = None) -> Union[None, PIL.ImageTk.PhotoImage]:

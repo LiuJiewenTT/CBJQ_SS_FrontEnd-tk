@@ -14,14 +14,23 @@ def _async_raise(tid, exctype):
 
 # 自定义线程类，添加强制终止功能
 class StoppableThread(threading.Thread):
+    def __init__(self, group=None, target=None, name=None,
+                 args=(), kwargs=None, *, daemon=None):
+        print('Initiate StoppableThread')
+        super().__init__(group=group, target=target, name=name, args=args, kwargs=kwargs, daemon=daemon)
+        self._stop_event = threading.Event()  # 用于优雅停止线程
+        print('StoppableThread initiation finished.')
+
     def raise_exception(self):
         _async_raise(self.ident, SystemExit)
 
+    def stop(self):
+        self._stop_event.set()
+
     # 使用 ctypes 终止线程
     def terminate_thread(self):
-        thread_id = ctypes.c_long(self.ident)
-        res = ctypes.windll.kernel32.TerminateThread(thread_id, 0)
-        if res == 0:
+        self.stop()
+        if self.is_alive() == 0:
             print("Failed to terminate thread.")
             return 1
         else:
